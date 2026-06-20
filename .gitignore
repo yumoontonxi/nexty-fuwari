@@ -30,3 +30,5 @@ yarn.lock
 .idea
 *.iml
 .github/
+check-notion.ts
+test-notion.ts
