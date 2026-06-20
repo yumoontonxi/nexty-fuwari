@@ -1,0 +1,187 @@
+---
+export const prerender = true;
+
+import GalleryLike from "@components/GalleryLike.astro";
+import FullWidthLayout from "@layouts/FullWidthLayout.astro";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import { getGalleryImages, getGalleryUrl } from "@utils/gallery-utils";
+
+const galleryItems = (await getGalleryImages()).map((item) => ({
+	slug: item.slug,
+	title: item.title,
+	coverImage: item.coverImage,
+}));
+---
+
+<FullWidthLayout title={i18n(I18nKey.gallery)} description={i18n(I18nKey.gallery)}>
+	<div class="gallery-page">
+		<div class="gallery-shell">
+			<section class="gallery-slogan" aria-label="创作灵感">
+				<h1 class="gallery-slogan-title">{i18n(I18nKey.gallery)}</h1>
+				<p class="gallery-slogan-quote">
+					『留住那些天马行空的瞬间，是给未来的礼物。』
+				</p>
+			</section>
+
+			{galleryItems.length > 0 ? (
+				<div class="gallery-masonry">
+					{galleryItems.map((item) => (
+						<article class="gallery-item">
+							<a href={getGalleryUrl(item.slug)} class="gallery-item-link">
+								<img
+									src={item.coverImage}
+									alt={item.title}
+									loading="lazy"
+									decoding="async"
+								/>
+							</a>
+							<div class="gallery-item-footer">
+								<p class="gallery-item-caption">{item.title}</p>
+								<GalleryLike slug={item.slug} compact />
+							</div>
+						</article>
+					))}
+				</div>
+			) : (
+				<p class="gallery-empty">
+					在 Notion 画廊数据库中上传照片（<code>photo</code> 字段），页面会自动同步展示。
+				</p>
+			)}
+		</div>
+	</div>
+</FullWidthLayout>
+
+<style>
+	.gallery-page {
+		display: flex;
+		min-height: calc(100vh - 200px);
+		flex: 1;
+		flex-grow: 1;
+		flex-direction: column;
+		width: 100%;
+		padding-top: 2rem;
+		padding-bottom: 3rem;
+	}
+
+	.gallery-shell {
+		width: 100%;
+		max-width: 1400px;
+		margin-inline: auto;
+		padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+	}
+
+	.gallery-slogan {
+		margin-bottom: clamp(3rem, 8vw, 5.5rem);
+		padding-bottom: clamp(2rem, 5vw, 3.5rem);
+		border-bottom: 1px solid var(--border-subtle);
+	}
+
+	.gallery-slogan-title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(2.25rem, 5vw, 3rem);
+		font-weight: 700;
+		line-height: 1.15;
+		letter-spacing: 0.02em;
+		color: var(--text-primary);
+	}
+
+	.gallery-slogan-quote {
+		margin: 1.5rem 0 0;
+		max-width: 36rem;
+		font-family: var(--font-text);
+		font-size: clamp(1rem, 2vw, 1.25rem);
+		font-weight: 300;
+		line-height: 1.75;
+		letter-spacing: 0.04em;
+		color: var(--text-tertiary);
+	}
+
+	.gallery-masonry {
+		column-count: 1;
+		column-gap: 30px;
+	}
+
+	@media (min-width: 640px) {
+		.gallery-masonry {
+			column-count: 2;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.gallery-masonry {
+			column-count: 3;
+		}
+	}
+
+	.gallery-item {
+		break-inside: avoid;
+		margin-bottom: 30px;
+	}
+
+	.gallery-item-link {
+		display: block;
+		border-radius: 12px;
+		overflow: hidden;
+		transition:
+			transform 0.4s ease,
+			box-shadow 0.4s ease;
+	}
+
+	.gallery-item img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 12px;
+	}
+
+	.gallery-item-link:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+	}
+
+	.gallery-item-footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-top: 0.625rem;
+		padding: 0 0.15rem;
+		position: relative;
+		z-index: 10;
+		pointer-events: auto;
+	}
+
+	.gallery-item-caption {
+		margin: 0;
+		flex: 1;
+		min-width: 0;
+		font-family: var(--font-text);
+		font-size: 0.8125rem;
+		line-height: 1.5;
+		letter-spacing: 0.04em;
+		color: var(--text-tertiary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	:root.dark .gallery-item-link:hover {
+		box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+	}
+
+	.gallery-empty {
+		padding: 4rem 1rem;
+		text-align: center;
+		font-family: var(--font-text);
+		font-size: 0.95rem;
+		line-height: 1.8;
+		color: var(--text-secondary);
+	}
+
+	.gallery-empty code {
+		font-size: 0.85em;
+		color: var(--text-primary);
+	}
+</style>

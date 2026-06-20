@@ -1,0 +1,388 @@
+---
+interface Props {
+	title: string;
+	date: string;
+	author: string;
+	excerpt: string;
+	pageUrl: string;
+	posterId: string;
+	coverUrl?: string;
+	category?: string;
+}
+
+const {
+	title,
+	date,
+	author,
+	excerpt,
+	pageUrl,
+	posterId,
+	coverUrl = "",
+	category = "",
+} = Astro.props;
+
+const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=0&data=${encodeURIComponent(pageUrl)}`;
+const hasCover = coverUrl.length > 0;
+---
+
+<div class="share-poster-shell" data-share-poster-root>
+    <div class="share-poster-actions">
+        <button type="button" class="share-poster-btn" data-share-trigger>
+            <span class="share-poster-btn-label">生成分享海报</span>
+        </button>
+    </div>
+
+    <div class="share-poster-offscreen" aria-hidden="true">
+        <div id={posterId} class="share-poster-canvas" data-share-poster>
+            <div class="share-poster-bg"></div>
+
+            <header class="share-poster-header">
+                <p class="share-poster-meta">
+                    {category && <span class="share-poster-category">{category}</span>}
+                    {category && <span class="share-poster-dot">·</span>}
+                    <span>{date}</span>
+                </p>
+                <h2 class="share-poster-title">{title}</h2>
+                <p class="share-poster-author">{author}</p>
+            </header>
+
+            {hasCover ? (
+                <div class="share-poster-cover">
+                    <img
+                        src={coverUrl}
+                        alt=""
+                        class="share-poster-cover-img"
+                        crossorigin="anonymous"
+                        loading="eager"
+                    />
+                </div>
+            ) : (
+                <div class="share-poster-cover share-poster-cover--placeholder" aria-hidden="true"></div>
+            )}
+
+            <p class="share-poster-excerpt">{excerpt}</p>
+
+            <footer class="share-poster-footer">
+                <div class="share-poster-brand">
+                    <span class="share-poster-brand-cn">微光</span>
+                    <span class="share-poster-brand-sep">/</span>
+                    <span class="share-poster-brand-url">nexty.cc</span>
+                </div>
+                <img
+                    src={qrUrl}
+                    alt=""
+                    class="share-poster-qr"
+                    width="88"
+                    height="88"
+                    crossorigin="anonymous"
+                    loading="eager"
+                />
+            </footer>
+        </div>
+    </div>
+</div>
+
+<style>
+    .share-poster-shell {
+        max-width: var(--article-max-width);
+        margin: 0 auto 2rem;
+    }
+
+    .share-poster-actions {
+        display: flex;
+        justify-content: center;
+    }
+
+    .share-poster-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.75rem;
+        border: 1px solid var(--border-subtle);
+        border-radius: 999px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-family: var(--font-text);
+        font-size: 0.875rem;
+        letter-spacing: 0.12em;
+        cursor: pointer;
+        transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease,
+            transform 0.2s ease;
+    }
+
+    .share-poster-btn:hover:not(:disabled) {
+        background: var(--bg-tertiary);
+        border-color: var(--accent-warm);
+        color: var(--accent-warm);
+    }
+
+    .share-poster-btn:disabled {
+        opacity: 0.6;
+        cursor: wait;
+    }
+
+    .share-poster-offscreen {
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        width: 640px;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: -1;
+    }
+
+    .share-poster-canvas {
+        position: relative;
+        width: 640px;
+        padding: 48px 44px 40px;
+        box-sizing: border-box;
+        background: #0a0a0a;
+        color: #f5f5f7;
+        font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+        overflow: hidden;
+    }
+
+    .share-poster-bg {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            165deg,
+            rgba(92, 7, 1, 0.45) 0%,
+            rgba(20, 10, 10, 0.95) 45%,
+            #0a0a0a 100%
+        );
+        pointer-events: none;
+    }
+
+    .share-poster-header,
+    .share-poster-cover,
+    .share-poster-excerpt,
+    .share-poster-footer {
+        position: relative;
+        z-index: 1;
+    }
+
+    .share-poster-meta {
+        margin: 0 0 20px;
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+    }
+
+    .share-poster-dot {
+        margin: 0 0.35rem;
+    }
+
+    .share-poster-title {
+        margin: 0 0 16px;
+        font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+        font-size: 2rem;
+        font-weight: 300;
+        line-height: 1.25;
+        letter-spacing: 0.04em;
+        color: #f5f5f7;
+    }
+
+    .share-poster-author {
+        margin: 0 0 28px;
+        font-size: 0.9rem;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.55);
+    }
+
+    .share-poster-cover {
+        margin-bottom: 28px;
+        border-radius: 10px;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .share-poster-cover--placeholder {
+        background: linear-gradient(135deg, rgba(139, 74, 74, 0.35), rgba(40, 20, 20, 0.8));
+    }
+
+    .share-poster-cover-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .share-poster-excerpt {
+        margin: 0 0 36px;
+        font-size: 0.95rem;
+        line-height: 1.75;
+        letter-spacing: 0.03em;
+        color: rgba(255, 255, 255, 0.72);
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .share-poster-footer {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .share-poster-brand {
+        display: flex;
+        align-items: baseline;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .share-poster-brand-cn {
+        font-size: 1.1rem;
+        letter-spacing: 0.35em;
+        color: rgba(212, 160, 160, 0.9);
+    }
+
+    .share-poster-qr {
+        display: block;
+        width: 88px;
+        height: 88px;
+        border-radius: 6px;
+        background: #fff;
+        padding: 4px;
+        box-sizing: border-box;
+    }
+</style>
+
+<script>
+import * as htmlToImage from "html-to-image";
+
+const IMAGE_WAIT_MS = 5000;
+const GENERATE_TIMEOUT_MS = 20000;
+
+function isCrossOriginUrl(src: string): boolean {
+	try {
+		const url = new URL(src, window.location.href);
+		return url.origin !== window.location.origin;
+	} catch {
+		return true;
+	}
+}
+
+function shouldIncludeImage(img: HTMLImageElement): boolean {
+	if (img.naturalWidth === 0) return false;
+
+	if (img.classList.contains("share-poster-cover-img")) {
+		return !isCrossOriginUrl(img.src);
+	}
+
+	return true;
+}
+
+function waitForImages(container: HTMLElement, timeoutMs = IMAGE_WAIT_MS) {
+	const images = Array.from(container.querySelectorAll("img"));
+
+	return Promise.all(
+		images.map(
+			(img) =>
+				new Promise<void>((resolve) => {
+					const done = () => resolve();
+
+					if (img.complete) {
+						done();
+						return;
+					}
+
+					img.addEventListener("load", done, { once: true });
+					img.addEventListener("error", done, { once: true });
+					window.setTimeout(done, timeoutMs);
+				}),
+		),
+	);
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string) {
+	return Promise.race([
+		promise,
+		new Promise<T>((_, reject) => {
+			window.setTimeout(() => reject(new Error(message)), timeoutMs);
+		}),
+	]);
+}
+
+function resetButtonState(
+	trigger: HTMLButtonElement,
+	label: Element | null,
+	originalText: string,
+) {
+	trigger.disabled = false;
+	trigger.removeAttribute("aria-busy");
+	if (label) label.textContent = originalText;
+}
+
+function bindSharePoster(root: HTMLElement) {
+	if (root.dataset.shareBound === "1") return;
+	root.dataset.shareBound = "1";
+
+	const trigger = root.querySelector<HTMLButtonElement>("[data-share-trigger]");
+	const poster = root.querySelector<HTMLElement>("[data-share-poster]");
+	if (!trigger || !poster) return;
+
+	trigger.addEventListener("click", async () => {
+		const label = trigger.querySelector(".share-poster-btn-label");
+		const originalText = label?.textContent ?? "生成分享海报";
+
+		trigger.disabled = true;
+		trigger.setAttribute("aria-busy", "true");
+		if (label) label.textContent = "正在生成…";
+
+		try {
+			await waitForImages(poster);
+			await new Promise<void>((resolve) =>
+				requestAnimationFrame(() => resolve()),
+			);
+
+			const dataUrl = await withTimeout(
+				htmlToImage.toPng(poster, {
+					quality: 0.95,
+					pixelRatio: 2,
+					cacheBust: true,
+					skipAutoScale: true,
+					skipFonts: true,
+					filter: (node) => {
+						if (!(node instanceof HTMLImageElement)) return true;
+						return shouldIncludeImage(node);
+					},
+				}),
+				GENERATE_TIMEOUT_MS,
+				"海报生成超时",
+			);
+
+			const link = document.createElement("a");
+			const safeName =
+				poster.id.replace(/[^a-zA-Z0-9-_]/g, "-") || "share-poster";
+			link.download = `nexty-poster-${safeName}.png`;
+			link.href = dataUrl;
+			link.click();
+		} catch (err) {
+			console.error("海报生成失败:", err);
+			window.alert("生成海报失败，可能是外部图片跨域导致。");
+		} finally {
+			resetButtonState(trigger, label, originalText);
+		}
+	});
+}
+
+function initSharePosters() {
+	document
+		.querySelectorAll<HTMLElement>("[data-share-poster-root]")
+		.forEach(bindSharePoster);
+}
+
+initSharePosters();
+document.addEventListener("astro:page-load", initSharePosters);
+</script>

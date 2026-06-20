@@ -5,7 +5,7 @@ import ImageWrapper from "../misc/ImageWrapper.astro";
 
 const config = profileConfig;
 ---
-<div class="profile">
+<div class="sidebar-profile">
     <a aria-label="Go to About Page" href={url('/about/')} class="profile-avatar-link">
         <ImageWrapper src={config.avatar || ""} alt="Profile Image of the Author" class="profile-avatar"></ImageWrapper>
     </a>
@@ -13,11 +13,9 @@ const config = profileConfig;
 </div>
 
 <style>
-    .profile {
-        text-align: center;
-    }
-
     .profile-avatar-link {
+        position: relative;
+        z-index: 1;
         display: block;
         width: 88px;
         height: 88px;
@@ -39,6 +37,8 @@ const config = profileConfig;
     }
 
     .profile-name {
+        position: relative;
+        z-index: 1;
         margin-top: 12px;
         font-family: var(--font-text);
         font-size: 15px;

@@ -10,12 +10,10 @@ import NavMenuPanel from "./widget/NavMenuPanel.astro";
 interface Props {
 	class?: string;
 	floating?: boolean;
-	light?: boolean;
 }
 
 const className = Astro.props.class;
 const floating = Astro.props.floating ?? false;
-const light = Astro.props.light ?? false;
 
 let links: NavBarLink[] = navBarConfig.links.map(
 	(item: NavBarLink | LinkPreset): NavBarLink => {
@@ -30,22 +28,22 @@ let links: NavBarLink[] = navBarConfig.links.map(
 <div
   id="navbar"
   class:list={[
-    floating ? "navbar-floating absolute top-0 left-0 z-30 w-full" : "navbar-sticky sticky top-0 z-50 w-full",
-    { "navbar-light": light },
+    floating ? "navbar-floating absolute top-0 left-0 z-20 w-full" : "navbar-sticky sticky top-0 z-50 w-full",
     className,
   ]}
 >
     <nav class="navbar-inner mx-auto flex h-[var(--nav-height)] w-full max-w-[var(--page-max-width)] items-center justify-center px-[var(--page-padding)]">
-        <div class="flex items-center gap-8">
-            <div class="hidden items-center gap-8 md:flex">
+        <div class="flex items-center gap-10">
+            <div class="hidden items-center gap-10 md:flex">
                 {links.map((l) => (
                     <a
                         aria-label={l.name}
                         href={l.external ? l.url : url(l.url)}
                         target={l.external ? "_blank" : null}
-                        class="nav-link"
+                        class="nav-item"
                     >
-                        {l.name}
+                        <span class="nav-cn">{l.labelCn ?? l.name}</span>
+                        <span class="nav-en">{l.labelEn ?? l.name}</span>
                     </a>
                 ))}
             </div>
@@ -65,36 +63,77 @@ let links: NavBarLink[] = navBarConfig.links.map(
 </div>
 
 <style>
-  .nav-link {
-    font-family: var(--font-text);
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--text-secondary);
-    text-decoration: none;
-    transition: color var(--duration-fast) ease;
+  #navbar,
+  #navbar nav {
+    background: transparent;
+    transition: background 0.3s ease, backdrop-filter 0.3s ease;
   }
 
-  .nav-link:hover {
-    color: var(--text-primary);
+  #navbar.navbar-floating {
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  #navbar.navbar-floating.navbar-scrolled,
+  #navbar.navbar-floating.navbar-scrolled nav {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  #navbar.navbar-sticky,
+  #navbar.navbar-sticky nav {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-decoration: none;
+    line-height: 1;
+  }
+
+  .nav-cn {
+    font-family: var(--font-text);
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.9) !important;
+    letter-spacing: 0.08em;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+    transition: color 0.2s ease;
+  }
+
+  .nav-en {
+    font-family: var(--font-text);
+    font-size: 10px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.45) !important;
+    letter-spacing: 0.2em;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+    transition: color 0.2s ease;
+  }
+
+  .nav-item:hover .nav-cn {
+    color: #ffffff !important;
+  }
+
+  .nav-item:hover .nav-en {
+    color: rgba(255, 255, 255, 0.8) !important;
   }
 
   .nav-menu-btn {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
     transition: color var(--duration-fast) ease;
   }
 
   .nav-menu-btn:hover {
-    color: var(--text-primary);
-  }
-
-  #navbar.navbar-scrolled {
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    background: var(--nav-scrolled-bg);
-  }
-
-  #navbar.navbar-light.navbar-scrolled {
-    border-bottom: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.1));
+    color: #ffffff;
   }
 </style>
 

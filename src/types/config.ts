@@ -56,6 +56,8 @@ export type NavBarLink = {
 	name: string;
 	url: string;
 	external?: boolean;
+	labelCn?: string;
+	labelEn?: string;
 };
 
 export type NavBarConfig = {

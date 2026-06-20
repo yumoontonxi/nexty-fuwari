@@ -1,0 +1,166 @@
+---
+interface Props {
+	slug: string;
+	compact?: boolean;
+}
+
+const { slug, compact = false } = Astro.props;
+---
+
+<div class:list={["gallery-like", { "is-compact": compact }]}>
+	<button type="button" class="gallery-like-btn" data-slug={slug} aria-label="点赞">
+		<svg
+			class="heart-icon"
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+		</svg>
+		<span class="like-count">0</span>
+	</button>
+</div>
+
+<style>
+	.gallery-like {
+		display: flex;
+		justify-content: center;
+		margin-top: 1.25rem;
+		position: relative;
+		z-index: 11;
+		pointer-events: auto;
+	}
+
+	.gallery-like.is-compact {
+		justify-content: flex-end;
+		margin-top: 0;
+		flex-shrink: 0;
+	}
+
+	.gallery-like-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1.125rem;
+		border: 1px solid var(--border-subtle);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--text-secondary);
+		font-family: var(--font-text);
+		font-size: 0.875rem;
+		position: relative;
+		z-index: 11;
+		pointer-events: auto;
+	}
+
+	.gallery-like.is-compact .gallery-like-btn {
+		padding: 0.35rem 0.75rem;
+		font-size: 0.8125rem;
+	}
+
+	.gallery-like-btn:hover {
+		background: var(--bg-tertiary);
+		color: var(--text-primary);
+	}
+
+	.heart-icon {
+		width: 1rem;
+		height: 1rem;
+		flex-shrink: 0;
+	}
+
+	.like-count {
+		min-width: 1.25rem;
+		text-align: center;
+		font-variant-numeric: tabular-nums;
+	}
+</style>
+
+<style is:global>
+	.gallery-like-btn {
+		cursor: pointer;
+		transition: transform 0.2s ease;
+	}
+
+	.gallery-like-btn:active {
+		transform: scale(0.9);
+	}
+
+	.gallery-like-btn.liked .heart-icon {
+		fill: #ef4444;
+		color: #ef4444;
+		stroke: #ef4444;
+		animation: gallery-heart-beat 0.45s ease;
+	}
+
+	.gallery-like-btn.liked .like-count {
+		color: #ef4444;
+	}
+
+	@keyframes gallery-heart-beat {
+		0% {
+			transform: scale(1);
+		}
+		35% {
+			transform: scale(1.25);
+		}
+		70% {
+			transform: scale(0.95);
+		}
+		100% {
+			transform: scale(1);
+		}
+	}
+</style>
+
+<script>
+function initGalleryLikes() {
+	document.querySelectorAll<HTMLButtonElement>(".gallery-like-btn").forEach((btn) => {
+		if (btn.dataset.likeBound === "true") return;
+
+		const slug = btn.getAttribute("data-slug");
+		if (!slug) return;
+
+		const countSpan = btn.querySelector<HTMLElement>(".like-count");
+		if (!countSpan) return;
+
+		btn.dataset.likeBound = "true";
+
+		const storageKey = `gallery-like-${slug}`;
+		const isLiked = localStorage.getItem(storageKey);
+		if (isLiked === "true") {
+			btn.classList.add("liked");
+			countSpan.textContent = "1";
+		}
+
+		btn.addEventListener("click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+
+			let count = Number.parseInt(countSpan.textContent || "0", 10);
+
+			if (btn.classList.contains("liked")) {
+				btn.classList.remove("liked");
+				countSpan.textContent = String(Math.max(0, count - 1));
+				localStorage.removeItem(storageKey);
+			} else {
+				btn.classList.add("liked");
+				countSpan.textContent = String(count + 1);
+				localStorage.setItem(storageKey, "true");
+
+				// 预留后续接入真实主题 API 的接口
+				// console.log('触发真实后端点赞 API:', slug);
+			}
+		});
+	});
+}
+
+document.addEventListener("astro:page-load", initGalleryLikes);
+document.addEventListener("gallery-content-updated", initGalleryLikes);
+initGalleryLikes();
+</script>

@@ -1,0 +1,347 @@
+---
+import type { HomeCarouselSlide } from "@utils/carousel-utils";
+
+interface Props {
+	slides: HomeCarouselSlide[];
+}
+
+const { slides } = Astro.props;
+---
+
+<div id="home-carousel-track-wrapper" class="home-carousel-track-wrapper">
+	<div id="home-carousel-track" class="home-carousel-track">
+		{slides.map((slide) => (
+			<a
+				href={slide.href}
+				class="carousel-slide-link home-carousel-slide"
+				data-no-swup={slide.source === "notion" || undefined}
+			>
+				<img
+					src={slide.coverImage}
+					alt={slide.title}
+					class="bg-image"
+					loading="eager"
+					decoding="async"
+				/>
+				<div class="gradient-overlay" aria-hidden="true"></div>
+				<div class="text-content">
+					<span class="home-carousel-category">{slide.category}</span>
+					<h2 class="home-carousel-title">{slide.title}</h2>
+				</div>
+			</a>
+		))}
+	</div>
+</div>
+
+<style>
+	.home-carousel-track-wrapper {
+		position: absolute;
+		top: 50%;
+		left: 0;
+		right: 0;
+		transform: translateY(-55%);
+		overflow: hidden;
+		z-index: 2;
+		pointer-events: auto;
+		mask-image: linear-gradient(
+			to right,
+			transparent 0%,
+			rgba(0, 0, 0, 0.6) 8%,
+			black 20%,
+			black 80%,
+			rgba(0, 0, 0, 0.6) 92%,
+			transparent 100%
+		);
+		-webkit-mask-image: linear-gradient(
+			to right,
+			transparent 0%,
+			rgba(0, 0, 0, 0.6) 8%,
+			black 20%,
+			black 80%,
+			rgba(0, 0, 0, 0.6) 92%,
+			transparent 100%
+		);
+	}
+
+	.home-carousel-track-wrapper::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 45%;
+		height: 100%;
+		backdrop-filter: blur(6px) brightness(0.6);
+		-webkit-backdrop-filter: blur(6px) brightness(0.6);
+		mask-image: linear-gradient(
+			to right,
+			transparent 0%,
+			black 20%,
+			black 80%,
+			transparent 100%
+		);
+		-webkit-mask-image: linear-gradient(
+			to right,
+			transparent 0%,
+			black 20%,
+			black 80%,
+			transparent 100%
+		);
+		z-index: 1;
+		pointer-events: none;
+	}
+
+	.home-carousel-track {
+		display: flex;
+		gap: 24px;
+		padding: 0 15vw;
+		will-change: transform;
+		pointer-events: auto;
+	}
+
+	.carousel-slide-link {
+		position: relative;
+		flex-shrink: 0;
+		display: block;
+		width: 65vw;
+		height: 42vh;
+		min-height: 220px;
+		border-radius: 6px;
+		overflow: hidden;
+		cursor: pointer;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.carousel-slide-link .bg-image {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+		pointer-events: none;
+		transition: transform 0.45s ease;
+	}
+
+	.carousel-slide-link:hover .bg-image {
+		transform: scale(1.03);
+	}
+
+	.gradient-overlay {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: linear-gradient(
+			to top,
+			rgba(0, 0, 0, 0.72) 0%,
+			rgba(0, 0, 0, 0.35) 45%,
+			transparent 100%
+		);
+		z-index: 1;
+	}
+
+	.text-content {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		padding: 1.5rem 1.75rem;
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.home-carousel-category {
+		font-family: var(--font-text);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		color: rgba(255, 255, 255, 0.72);
+	}
+
+	.home-carousel-title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(1.125rem, 2.4vw, 1.625rem);
+		font-weight: 400;
+		line-height: 1.35;
+		letter-spacing: 0.02em;
+		color: rgba(255, 255, 255, 0.96);
+		text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+	}
+</style>
+
+<script is:inline>
+(function initHomeCarouselModule() {
+	const SLIDE_SPEED = 40;
+	const CLICK_THRESHOLD_PX = 5;
+
+	function cleanup(instance) {
+		if (!instance) return;
+		if (instance.animId) cancelAnimationFrame(instance.animId);
+		if (instance.wheelHandler) {
+			instance.wrapper.removeEventListener("wheel", instance.wheelHandler);
+		}
+		if (instance.mouseEnterHandler) {
+			instance.wrapper.removeEventListener("mouseenter", instance.mouseEnterHandler);
+		}
+		if (instance.mouseLeaveHandler) {
+			instance.wrapper.removeEventListener("mouseleave", instance.mouseLeaveHandler);
+		}
+		if (instance.visibilityHandler) {
+			document.removeEventListener("visibilitychange", instance.visibilityHandler);
+		}
+		if (instance.pointerDownHandler) {
+			instance.wrapper.removeEventListener("pointerdown", instance.pointerDownHandler);
+		}
+		if (instance.pointerUpHandler) {
+			instance.wrapper.removeEventListener("pointerup", instance.pointerUpHandler);
+		}
+		if (instance.clickHandler) {
+			instance.wrapper.removeEventListener("click", instance.clickHandler, true);
+		}
+	}
+
+	function boot() {
+		const track = document.getElementById("home-carousel-track");
+		const wrapper = document.getElementById("home-carousel-track-wrapper");
+		if (!track || !wrapper) return;
+
+		cleanup(window.__homeCarousel);
+
+		let offset = 0;
+		let isPaused = false;
+		let lastTime = null;
+		let dragStartX = 0;
+		let dragStartY = 0;
+		let dragDistance = 0;
+		let isDragging = false;
+
+		function getSlideWidth() {
+			const slide = track.querySelector(".carousel-slide-link:not(.clone)");
+			if (!slide) return window.innerWidth * 0.65 + 24;
+			return slide.offsetWidth + 24;
+		}
+
+		function getTotalWidth() {
+			const slides = track.querySelectorAll(".carousel-slide-link:not(.clone)");
+			return slides.length * getSlideWidth();
+		}
+
+		function normalizeOffset() {
+			const total = getTotalWidth();
+			if (total <= 0) return;
+			if (offset < 0) offset += total;
+			if (offset >= total) offset -= total;
+		}
+
+		function animate(ts) {
+			if (lastTime === null) lastTime = ts;
+			const delta = ts - lastTime;
+			lastTime = ts;
+
+			if (!isPaused) {
+				offset += SLIDE_SPEED * (delta / 1000);
+				normalizeOffset();
+			}
+
+			track.style.transform = `translateX(${-offset}px)`;
+			instance.animId = requestAnimationFrame(animate);
+		}
+
+		track.querySelectorAll(".carousel-slide-link.clone").forEach((node) => {
+			node.remove();
+		});
+
+		const origSlides = Array.from(
+			track.querySelectorAll(".carousel-slide-link:not(.clone)"),
+		);
+		origSlides.forEach((slide) => {
+			const clone = slide.cloneNode(true);
+			clone.classList.add("clone");
+			track.appendChild(clone);
+		});
+
+		const instance = {
+			wrapper,
+			animId: null,
+			wheelHandler: null,
+			mouseEnterHandler: null,
+			mouseLeaveHandler: null,
+			visibilityHandler: null,
+			pointerDownHandler: null,
+			pointerUpHandler: null,
+			clickHandler: null,
+		};
+
+		instance.mouseEnterHandler = () => {
+			isPaused = true;
+		};
+
+		instance.mouseLeaveHandler = () => {
+			isPaused = false;
+			lastTime = null;
+			isDragging = false;
+			dragDistance = 0;
+		};
+
+		instance.wheelHandler = (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			offset += e.deltaY * 0.8;
+			normalizeOffset();
+		};
+
+		instance.pointerDownHandler = (e) => {
+			if (e.button !== 0) return;
+			dragStartX = e.clientX;
+			dragStartY = e.clientY;
+			dragDistance = 0;
+			isDragging = false;
+		};
+
+		instance.pointerUpHandler = (e) => {
+			const dx = e.clientX - dragStartX;
+			const dy = e.clientY - dragStartY;
+			dragDistance = Math.hypot(dx, dy);
+			isDragging = dragDistance > CLICK_THRESHOLD_PX;
+		};
+
+		instance.clickHandler = (e) => {
+			const link = e.target.closest("a.carousel-slide-link");
+			if (!link || !wrapper.contains(link)) return;
+
+			if (isDragging || dragDistance > CLICK_THRESHOLD_PX) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+		};
+
+		instance.visibilityHandler = () => {
+			if (document.hidden) {
+				if (instance.animId) cancelAnimationFrame(instance.animId);
+				lastTime = null;
+			} else {
+				lastTime = null;
+				instance.animId = requestAnimationFrame(animate);
+			}
+		};
+
+		wrapper.addEventListener("mouseenter", instance.mouseEnterHandler);
+		wrapper.addEventListener("mouseleave", instance.mouseLeaveHandler);
+		wrapper.addEventListener("wheel", instance.wheelHandler, { passive: false });
+		wrapper.addEventListener("pointerdown", instance.pointerDownHandler);
+		wrapper.addEventListener("pointerup", instance.pointerUpHandler);
+		wrapper.addEventListener("click", instance.clickHandler, true);
+		document.addEventListener("visibilitychange", instance.visibilityHandler);
+
+		window.__homeCarousel = instance;
+		lastTime = null;
+		instance.animId = requestAnimationFrame(animate);
+	}
+
+	boot();
+	document.addEventListener("astro:page-load", boot);
+})();
+</script>

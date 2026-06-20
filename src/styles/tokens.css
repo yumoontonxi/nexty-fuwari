@@ -59,7 +59,7 @@
   --page-transition-duration: 0.15s;
 
   /* Layout */
-  --nav-height: 52px;
+  --nav-height: 60px;
   --sidebar-width: 200px;
   --sidebar-width-tablet: 160px;
   --content-gap: 56px;
@@ -120,14 +120,14 @@
   color: #1d1d1f;
 }
 
-/* Light navbar (non-hero pages) */
-#navbar.navbar-light {
-  --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
+/* Navbar — unified dark bar on all pages */
+#navbar {
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1a6;
   --text-tertiary: #86868b;
-  --search-bg: rgba(0, 0, 0, 0.06);
-  --nav-scrolled-bg: rgba(255, 255, 255, 0.72);
-  --border-subtle: rgba(0, 0, 0, 0.1);
-  --row-hover-bg: rgba(0, 0, 0, 0.03);
-  --bg-primary: #ffffff;
+  --search-bg: rgba(118, 118, 128, 0.24);
+  --nav-scrolled-bg: rgba(0, 0, 0, 0.85);
+  --border-subtle: rgba(84, 84, 88, 0.3);
+  --row-hover-bg: rgba(255, 255, 255, 0.03);
+  --bg-primary: #1c1c1e;
 }

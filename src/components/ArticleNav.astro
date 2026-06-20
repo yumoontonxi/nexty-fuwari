@@ -1,0 +1,109 @@
+---
+import { Icon } from "astro-icon/components";
+import type { MergedPostNavigation } from "@utils/posts-merge";
+
+interface Props {
+	navigation: MergedPostNavigation;
+}
+
+const { navigation } = Astro.props;
+const { newer, older } = navigation;
+---
+
+<nav class="article-nav onload-animation" aria-label="Post navigation">
+    <a
+        href={newer?.url ?? "#"}
+        class:list={["article-nav-link article-nav-link--prev", { "is-disabled": !newer }]}
+        data-no-swup={newer?.url.includes("/notion/") || undefined}
+    >
+        {newer && (
+            <>
+                <Icon name="material-symbols:chevron-left-rounded" class="article-nav-icon" />
+                <span class="article-nav-label">{newer.title}</span>
+            </>
+        )}
+    </a>
+    <a
+        href={older?.url ?? "#"}
+        class:list={["article-nav-link article-nav-link--next", { "is-disabled": !older }]}
+        data-no-swup={older?.url.includes("/notion/") || undefined}
+    >
+        {older && (
+            <>
+                <span class="article-nav-label">{older.title}</span>
+                <Icon name="material-symbols:chevron-right-rounded" class="article-nav-icon" />
+            </>
+        )}
+    </a>
+</nav>
+
+<style>
+    .article-nav {
+        max-width: var(--article-max-width);
+        margin: 0 auto 3rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+
+    @media (min-width: 768px) {
+        .article-nav {
+            flex-direction: row;
+        }
+    }
+
+    .article-nav-link {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        text-decoration: none;
+        color: var(--text-secondary);
+        transition: background var(--duration) var(--ease),
+            color var(--duration-fast) ease;
+        min-height: 3.5rem;
+        overflow: hidden;
+    }
+
+    .article-nav-link:hover:not(.is-disabled) {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
+
+    .article-nav-link--next {
+        justify-content: flex-end;
+    }
+
+    .article-nav-link.is-disabled {
+        display: none !important;
+    }
+
+    .article-nav-icon {
+        flex-shrink: 0;
+        font-size: 1.5rem;
+        color: var(--text-primary);
+    }
+
+    .article-nav-label {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-text);
+        font-size: 0.875rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .article-nav-link--prev .article-nav-label {
+        text-align: left;
+    }
+
+    .article-nav-link--next .article-nav-label {
+        text-align: right;
+    }
+</style>

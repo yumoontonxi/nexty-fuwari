@@ -1,0 +1,6 @@
+name = "nexty-fuwari"
+compatibility_date = "2024-09-23"
+
+[[kv_namespaces]]
+binding = "NEXTY_LIKES"
+id = "1c6f0df4bce348019e28af933d10e78e"

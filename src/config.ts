@@ -5,7 +5,6 @@ import type {
 	ProfileConfig,
 	SiteConfig,
 } from "./types/config";
-import { LinkPreset } from "./types/config";
 
 export const siteConfig: SiteConfig = {
 	title: "Nexty",
@@ -34,9 +33,10 @@ export const siteConfig: SiteConfig = {
 
 export const navBarConfig: NavBarConfig = {
 	links: [
-		LinkPreset.Home,
-		LinkPreset.Gallery,
-		LinkPreset.About,
+		{ name: "原野", labelCn: "原野", labelEn: "WILD", url: "/" },
+		{ name: "微光", labelCn: "微光", labelEn: "GLOW", url: "/posts/" },
+		{ name: "留影", labelCn: "留影", labelEn: "FRAME", url: "/gallery/" },
+		{ name: "土壤", labelCn: "土壤", labelEn: "EARTH", url: "/about/" },
 	],
 };
 

@@ -1,11 +1,13 @@
 ---
+export const prerender = true;
+
 import Hero from "../components/Hero.astro";
 import Layout from "../layouts/Layout.astro";
-import { getHeroSlides } from "../utils/hero-utils";
+import { getHomeCarouselSlides } from "../utils/carousel-utils";
 
-const heroSlides = await getHeroSlides();
+const carouselSlides = await getHomeCarouselSlides();
 ---
 
 <Layout>
-    <Hero slides={heroSlides} />
+    <Hero slides={carouselSlides} />
 </Layout>

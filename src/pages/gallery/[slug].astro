@@ -1,0 +1,554 @@
+---
+export const prerender = true;
+
+import CommentsStub from "@components/CommentsStub.astro";
+import GalleryLike from "@components/GalleryLike.astro";
+import { Icon } from "astro-icon/components";
+import FullWidthLayout from "@layouts/FullWidthLayout.astro";
+import {
+	buildGalleryMosaicTiles,
+	getGalleryImages,
+	getGalleryNavigation,
+	getGalleryUrl,
+} from "@utils/gallery-utils";
+import type { GalleryPhoto } from "@utils/notion";
+import { url } from "@utils/url-utils";
+
+type GalleryPageProps = {
+	photo: GalleryPhoto;
+	prevSlug: string | null;
+	prevTitle: string | null;
+	nextSlug: string | null;
+	nextTitle: string | null;
+};
+
+export async function getStaticPaths() {
+	const photos = await getGalleryImages();
+
+	return photos.map((photo, index) => {
+		const prev = photos[index - 1];
+		const next = photos[index + 1];
+
+		return {
+			params: { slug: photo.slug },
+			props: {
+				photo,
+				prevSlug: prev?.slug ?? null,
+				prevTitle: prev?.title ?? null,
+				nextSlug: next?.slug ?? null,
+				nextTitle: next?.title ?? null,
+			} satisfies GalleryPageProps,
+		};
+	});
+}
+
+let {
+	photo,
+	prevSlug,
+	prevTitle,
+	nextSlug,
+	nextTitle,
+} = Astro.props as GalleryPageProps;
+
+const slugParam = Astro.params.slug ?? "";
+
+if (!photo && slugParam) {
+	const photos = await getGalleryImages();
+	photo = photos.find((item) => item.slug === slugParam);
+	if (photo) {
+		const navigation = getGalleryNavigation(photos, photo.slug);
+		prevSlug = navigation.prevSlug;
+		prevTitle = navigation.prevTitle;
+		nextSlug = navigation.nextSlug;
+		nextTitle = navigation.nextTitle;
+	}
+}
+
+if (!photo) {
+	return Astro.redirect("/404/");
+}
+
+const allPhotos = await getGalleryImages();
+const mosaicTiles = buildGalleryMosaicTiles(allPhotos, photo.slug);
+const mosaicCols =
+	mosaicTiles.length > 0
+		? Math.min(5, Math.ceil(Math.sqrt(mosaicTiles.length)))
+		: 1;
+const mosaicRows =
+	mosaicTiles.length > 0 ? Math.ceil(mosaicTiles.length / mosaicCols) : 1;
+
+const likeSlug = photo.slug;
+---
+
+<FullWidthLayout title={photo.title} description={photo.remark || photo.title}>
+	<div class="gallery-page-wrapper" data-gallery-home={url("/gallery/")}>
+		{mosaicTiles.length > 0 && (
+			<div
+				class="gallery-background-mosaic"
+				style={`--mosaic-cols: ${mosaicCols}; --mosaic-rows: ${mosaicRows};`}
+				aria-hidden="true"
+			>
+				{mosaicTiles.map((tile) => (
+					<div class="gallery-mosaic-tile">
+						<img src={tile.src} alt="" loading="lazy" decoding="async" />
+					</div>
+				))}
+			</div>
+		)}
+
+		<div class="gallery-water-filter" aria-hidden="true"></div>
+
+		<div class="gallery-detail-page">
+		<div class="gallery-detail-shell">
+			<article id="gallery-card" class="gallery-card">
+				<div class="gallery-card-media">
+					{prevSlug ? (
+						<a
+							href={getGalleryUrl(prevSlug)}
+							class="gallery-card-arrow gallery-card-arrow--prev gallery-nav-btn"
+							data-no-swup
+							aria-label={`上一张：${prevTitle}`}
+						>
+							<Icon name="material-symbols:chevron-left-rounded" />
+							<span class="gallery-card-arrow-label">上一张</span>
+						</a>
+					) : (
+						<span class="gallery-card-arrow gallery-card-arrow--placeholder" aria-hidden="true" />
+					)}
+
+					<img
+						src={photo.coverImage}
+						alt={photo.title}
+						class="gallery-card-image"
+						loading="eager"
+						decoding="async"
+					/>
+
+					{nextSlug ? (
+						<a
+							href={getGalleryUrl(nextSlug)}
+							class="gallery-card-arrow gallery-card-arrow--next gallery-nav-btn"
+							data-no-swup
+							aria-label={`下一张：${nextTitle}`}
+						>
+							<span class="gallery-card-arrow-label">下一张</span>
+							<Icon name="material-symbols:chevron-right-rounded" />
+						</a>
+					) : (
+						<span class="gallery-card-arrow gallery-card-arrow--placeholder" aria-hidden="true" />
+					)}
+				</div>
+
+				<div class="gallery-card-placard">
+					<div class="gallery-card-placard-header">
+						<h2 class="gallery-card-title">{photo.title}</h2>
+						{photo.location && (
+							<p class="gallery-card-location">
+								<Icon name="material-symbols:location-on-outline" class="gallery-card-location-icon" />
+								<span>{photo.location}</span>
+							</p>
+						)}
+					</div>
+					{photo.remark && (
+						<p class="gallery-card-remark">{photo.remark}</p>
+					)}
+				</div>
+
+				<GalleryLike slug={likeSlug} />
+			</article>
+
+			<CommentsStub />
+		</div>
+		</div>
+	</div>
+</FullWidthLayout>
+
+<style>
+	.gallery-page-wrapper {
+		position: relative;
+		z-index: 10;
+		isolation: isolate;
+		flex: 1;
+		width: 100%;
+		pointer-events: auto;
+		cursor: zoom-out;
+		min-height: calc(100vh - 200px);
+	}
+
+	.gallery-detail-page {
+		position: relative;
+		z-index: 10;
+		pointer-events: auto;
+		display: flex;
+		flex: 1;
+		flex-grow: 1;
+		flex-direction: column;
+		width: 100%;
+		padding: 0 0 clamp(3rem, 6vw, 4rem);
+	}
+
+	.gallery-detail-shell {
+		width: 100%;
+		max-width: 1100px;
+		margin-inline: auto;
+		padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+	}
+
+	.gallery-card {
+		position: relative;
+		z-index: 10;
+		pointer-events: auto;
+		cursor: default;
+		margin-top: 6rem;
+		background: var(--card-bg, #ffffff);
+		border-radius: 20px;
+		padding: clamp(1.5rem, 4vw, 2.5rem);
+		box-shadow:
+			0 28px 64px rgba(0, 0, 0, 0.1),
+			0 12px 28px rgba(0, 0, 0, 0.05);
+		transition: opacity 0.15s ease;
+	}
+
+	.gallery-card.is-loading {
+		opacity: 0.65;
+		pointer-events: none;
+	}
+
+	.gallery-card-image--enter {
+		opacity: 0;
+		transition: opacity 0.2s ease;
+	}
+
+	.gallery-card-image--enter.is-visible {
+		opacity: 1;
+	}
+
+	.gallery-background-mosaic,
+	.gallery-water-filter {
+		pointer-events: none;
+	}
+
+	.gallery-background-mosaic {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: -2;
+		display: grid;
+		grid-template-columns: repeat(var(--mosaic-cols), 1fr);
+		grid-template-rows: repeat(var(--mosaic-rows), 1fr);
+		overflow: hidden;
+	}
+
+	.gallery-mosaic-tile {
+		overflow: hidden;
+		min-height: 0;
+		min-width: 0;
+	}
+
+	.gallery-mosaic-tile img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	.gallery-water-filter {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: -1;
+		backdrop-filter: blur(25px) saturate(200%);
+		-webkit-backdrop-filter: blur(25px) saturate(200%);
+		background-color: rgba(255, 255, 255, 0.4);
+		background-image:
+			radial-gradient(at 20% 20%, rgba(200, 230, 255, 0.1) 0px, transparent 50%),
+			radial-gradient(at 80% 80%, rgba(255, 220, 230, 0.1) 0px, transparent 50%);
+	}
+
+	:root.dark .gallery-water-filter {
+		background-color: rgba(18, 18, 20, 0.5);
+		background-image:
+			radial-gradient(at 20% 20%, rgba(120, 160, 220, 0.12) 0px, transparent 50%),
+			radial-gradient(at 80% 80%, rgba(200, 120, 150, 0.1) 0px, transparent 50%);
+	}
+
+	:global(.comments-section) {
+		position: relative;
+		z-index: 10;
+		pointer-events: auto;
+		cursor: default;
+	}
+
+	:root.dark .gallery-card {
+		box-shadow:
+			0 32px 72px rgba(0, 0, 0, 0.38),
+			0 14px 32px rgba(0, 0, 0, 0.22);
+	}
+
+	.gallery-card-media {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: clamp(0.5rem, 2vw, 1.25rem);
+	}
+
+	.gallery-card-image {
+		display: block;
+		max-width: 90%;
+		max-height: 80vh;
+		width: auto;
+		height: auto;
+		object-fit: contain;
+		border-radius: 12px;
+	}
+
+	.gallery-card-arrow {
+		flex-shrink: 0;
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem;
+		min-width: 3rem;
+		padding: 0.75rem 0.5rem;
+		border-radius: 14px;
+		border: 1px solid var(--border-subtle);
+		background: var(--bg-secondary);
+		text-decoration: none;
+		color: var(--text-secondary);
+		font-family: var(--font-text);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		cursor: pointer;
+		transition:
+			background var(--duration-fast) ease,
+			color var(--duration-fast) ease,
+			transform var(--duration-fast) ease;
+	}
+
+	.gallery-card-arrow svg {
+		font-size: 1.75rem;
+		color: var(--text-primary);
+	}
+
+	.gallery-card-arrow:hover {
+		background: var(--bg-tertiary);
+		color: var(--text-primary);
+		transform: translateY(-1px);
+	}
+
+	.gallery-card-arrow--placeholder {
+		visibility: hidden;
+		pointer-events: none;
+		border-color: transparent;
+		background: transparent;
+	}
+
+	.gallery-card-arrow-label {
+		writing-mode: vertical-rl;
+		text-orientation: mixed;
+	}
+
+	@media (max-width: 639px) {
+		.gallery-card-media {
+			flex-direction: column;
+		}
+
+		.gallery-card-arrow {
+			flex-direction: row;
+			width: 100%;
+			min-height: 2.75rem;
+		}
+
+		.gallery-card-arrow-label {
+			writing-mode: horizontal-tb;
+		}
+
+		.gallery-card-image {
+			max-width: 100%;
+			order: -1;
+		}
+
+		.gallery-card-arrow--prev {
+			order: 1;
+		}
+
+		.gallery-card-arrow--next {
+			order: 2;
+		}
+
+		.gallery-card-arrow--placeholder {
+			display: none;
+		}
+	}
+
+	.gallery-card-placard {
+		margin-top: 1.75rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--border-subtle);
+	}
+
+	.gallery-card-placard-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1.25rem;
+	}
+
+	.gallery-card-title {
+		margin: 0;
+		flex: 1;
+		min-width: 0;
+		font-family: var(--font-display);
+		font-size: clamp(1.125rem, 2.2vw, 1.375rem);
+		font-weight: 500;
+		line-height: 1.4;
+		letter-spacing: 0.03em;
+		color: var(--text-primary);
+	}
+
+	.gallery-card-location {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		margin: 0;
+		flex-shrink: 0;
+		font-family: var(--font-text);
+		font-size: 0.8125rem;
+		line-height: 1.5;
+		letter-spacing: 0.04em;
+		color: var(--text-tertiary);
+	}
+
+	.gallery-card-location-icon {
+		font-size: 1rem;
+		color: var(--text-secondary);
+	}
+
+	.gallery-card-remark {
+		margin: 1rem 0 0;
+		font-family: var(--font-text);
+		font-size: 0.875rem;
+		line-height: 1.75;
+		letter-spacing: 0.03em;
+		color: var(--text-secondary);
+	}
+</style>
+
+<script>
+let gallerySwapInFlight = false;
+
+function animateGalleryImage(card: HTMLElement) {
+	const img = card.querySelector<HTMLImageElement>(".gallery-card-image");
+	if (!img) return;
+	img.classList.add("gallery-card-image--enter");
+	requestAnimationFrame(() => {
+		img.classList.add("is-visible");
+	});
+}
+
+async function swapGalleryPage(targetUrl: string) {
+	if (gallerySwapInFlight) return;
+
+	const card = document.getElementById("gallery-card");
+	const comments = document.querySelector(".comments-section");
+	if (!card || !comments) {
+		window.location.href = targetUrl;
+		return;
+	}
+
+	gallerySwapInFlight = true;
+	card.classList.add("is-loading");
+
+	try {
+		const response = await fetch(targetUrl, { headers: { Accept: "text/html" } });
+		if (!response.ok) throw new Error("fetch failed");
+
+		const html = await response.text();
+		const doc = new DOMParser().parseFromString(html, "text/html");
+		const newCard = doc.getElementById("gallery-card");
+		const newComments = doc.querySelector(".comments-section");
+
+		if (!newCard || !newComments) throw new Error("parse failed");
+
+		const importedCard = document.importNode(newCard, true);
+		const importedComments = document.importNode(newComments, true);
+
+		card.replaceWith(importedCard);
+		comments.replaceWith(importedComments);
+
+		animateGalleryImage(importedCard as HTMLElement);
+		window.history.pushState({ gallerySwap: true }, "", targetUrl);
+
+		if (doc.title) document.title = doc.title;
+
+		bindGalleryNavSwap();
+		document.dispatchEvent(new CustomEvent("gallery-content-updated"));
+	} catch {
+		window.location.href = targetUrl;
+	} finally {
+		gallerySwapInFlight = false;
+	}
+}
+
+function bindGalleryNavSwap() {
+	document
+		.querySelectorAll<HTMLAnchorElement>(".gallery-nav-btn")
+		.forEach((link) => {
+			if (link.dataset.galleryNavBound === "true") return;
+			link.dataset.galleryNavBound = "true";
+
+			link.addEventListener("click", (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+
+				const href = link.getAttribute("href");
+				if (!href) return;
+
+				void swapGalleryPage(href);
+			});
+		});
+}
+
+function bindGalleryBackgroundExit() {
+	const pageWrapper = document.querySelector<HTMLElement>(".gallery-page-wrapper");
+	if (!pageWrapper || pageWrapper.dataset.backgroundExitBound === "true") return;
+
+	pageWrapper.dataset.backgroundExitBound = "true";
+
+	pageWrapper.addEventListener("click", (event) => {
+		const target = event.target;
+		if (!(target instanceof Element)) return;
+
+		if (
+			target.closest(".gallery-card") ||
+			target.closest(".comments-section")
+		) {
+			return;
+		}
+
+		const home =
+			pageWrapper.getAttribute("data-gallery-home") || "/gallery/";
+		window.location.href = home;
+	});
+}
+
+function initGalleryDetailPage() {
+	if (!document.getElementById("gallery-card")) return;
+	bindGalleryNavSwap();
+	bindGalleryBackgroundExit();
+}
+
+initGalleryDetailPage();
+document.addEventListener("astro:page-load", initGalleryDetailPage);
+
+window.addEventListener("popstate", () => {
+	if (!document.getElementById("gallery-card")) return;
+	void swapGalleryPage(window.location.href);
+});
+</script>

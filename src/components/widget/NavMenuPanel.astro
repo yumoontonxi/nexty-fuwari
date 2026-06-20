@@ -9,14 +9,17 @@ interface Props {
 
 const links = Astro.props.links;
 ---
-<div id="nav-menu-panel" class="nav-menu-panel float-panel float-panel-closed fixed right-4 top-14 min-w-[12rem] px-4 py-3 md:hidden">
+<div id="nav-menu-panel" class="nav-menu-panel float-panel float-panel-closed fixed right-4 top-[calc(var(--nav-height)+0.5rem)] min-w-[12rem] px-4 py-3 md:hidden">
     {links.map((link) => (
         <a
             href={link.external ? link.url : url(link.url)}
             class="nav-menu-link"
             target={link.external ? "_blank" : null}
         >
-            <span>{link.name}</span>
+            <span class="nav-menu-labels">
+                <span class="nav-menu-cn">{link.labelCn ?? link.name}</span>
+                <span class="nav-menu-en">{link.labelEn ?? link.name}</span>
+            </span>
             {!link.external && <Icon name="material-symbols:chevron-right-rounded" class="text-base opacity-40" />}
             {link.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-xs opacity-40" />}
         </a>
@@ -34,15 +37,33 @@ const links = Astro.props.links;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 8px 0;
-        font-family: var(--font-text);
-        font-size: 14px;
-        color: var(--text-secondary);
+        padding: 10px 0;
         text-decoration: none;
         transition: color var(--duration-fast) ease;
     }
 
-    .nav-menu-link:hover {
+    .nav-menu-labels {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        line-height: 1;
+    }
+
+    .nav-menu-cn {
+        font-family: var(--font-text);
+        font-size: 14px;
         color: var(--text-primary);
+        letter-spacing: 0.05em;
+    }
+
+    .nav-menu-en {
+        font-family: var(--font-text);
+        font-size: 9px;
+        color: var(--text-tertiary);
+        letter-spacing: 0.15em;
+    }
+
+    .nav-menu-link:hover .nav-menu-cn {
+        color: var(--accent-warm, var(--text-primary));
     }
 </style>

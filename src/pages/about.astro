@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import CommentsStub from "@components/CommentsStub.astro";
 import ImageWrapper from "@components/misc/ImageWrapper.astro";
 import FullWidthLayout from "../layouts/FullWidthLayout.astro";
@@ -123,15 +125,11 @@ const storySections: StorySection[] = [
 							</div>
 						</div>
 
-						<div class="flex w-full flex-col justify-center md:w-2/3">
-							<h2 class="mb-5 text-2xl font-light tracking-wide text-[var(--text-primary)]">
-								{section.title}
-							</h2>
-							<div class="prose prose-base dark:prose-invert max-w-none !prose-p:my-0 !prose-p:leading-relaxed !prose-p:text-[var(--text-body)] !prose-headings:text-[var(--text-primary)] space-y-4">
-								{section.paragraphs.map((paragraph) => (
-									<p>{paragraph}</p>
-								))}
-							</div>
+						<div class="about-content flex w-full flex-col justify-center md:w-2/3">
+							<h2>{section.title}</h2>
+							{section.paragraphs.map((paragraph) => (
+								<p>{paragraph}</p>
+							))}
 						</div>
 					</article>
 				))}
@@ -145,6 +143,36 @@ const storySections: StorySection[] = [
 <style>
 	.about-hero {
 		margin-top: -2rem;
+	}
+
+	.about-content h2,
+	.about-content h3 {
+		font-family: var(--font-display);
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		margin-top: 2.5rem;
+		margin-bottom: 1rem;
+		line-height: 1.35;
+		letter-spacing: 0.02em;
+	}
+
+	.about-content > h2:first-child,
+	.about-content > h3:first-child {
+		margin-top: 0;
+	}
+
+	.about-content p {
+		font-family: var(--font-text);
+		font-size: 1rem;
+		line-height: 1.85;
+		color: var(--text-secondary);
+		margin-bottom: 1.5rem;
+		letter-spacing: 0.02em;
+	}
+
+	.about-content p:last-child {
+		margin-bottom: 0;
 	}
 
 	@media (min-width: 768px) {

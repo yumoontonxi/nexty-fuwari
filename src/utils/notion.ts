@@ -11,10 +11,15 @@ export interface NotionPost {
 	tags: string[];
 	description: string;
 	url: string;
+	/** Unified cover field: page cover + `cover` Files & media property */
+	coverImage: string | null;
+	/** @deprecated Use coverImage */
 	image: string | null;
 }
 
-function getEnv(name: "NOTION_TOKEN" | "NOTION_DATABASE_ID"): string | undefined {
+function getEnv(
+	name: "NOTION_TOKEN" | "NOTION_DATABASE_ID" | "NOTION_GALLERY_DB_ID",
+): string | undefined {
 	const fromMeta = import.meta.env[name];
 	if (typeof fromMeta === "string" && fromMeta.length > 0) return fromMeta;
 	if (typeof process !== "undefined" && process.env[name]) {
@@ -156,7 +161,15 @@ function getPageCover(page: PageObjectResponse): string | null {
 				? cover.file.url
 				: null;
 
-	const coverProp = getProperty(page, "封面", "Cover", "cover", "Image", "image");
+	// Notion database property: add a Files & media column named `cover`
+	const coverProp = getProperty(
+		page,
+		"cover",
+		"Cover",
+		"封面",
+		"Image",
+		"image",
+	);
 	let imageFromProp: string | null = null;
 
 	if (coverProp?.type === "files" && coverProp.files.length > 0) {
@@ -191,7 +204,7 @@ function toNotionPost(page: PageObjectResponse): NotionPost {
 	const id = page.id;
 	const title = getTitle(page);
 	const date = getPublishedDate(page);
-	const image = getPageCover(page);
+	const coverImage = getPageCover(page);
 
 	return {
 		id,
@@ -202,7 +215,8 @@ function toNotionPost(page: PageObjectResponse): NotionPost {
 		tags: getTags(page),
 		description: "",
 		url: getNotionPostUrl(id),
-		image,
+		coverImage,
+		image: coverImage,
 	};
 }
 
@@ -265,7 +279,7 @@ async function fetchFromNotion(): Promise<NotionPost[]> {
 				}
 				const post = toNotionPost(result);
 				if (import.meta.env.DEV) {
-					console.log(`[notion] ${post.title} image:`, post.image);
+					console.log(`[notion] ${post.title} coverImage:`, post.coverImage);
 				}
 				posts.push(post);
 			}
@@ -344,4 +358,153 @@ export async function getNotionPostById(
 export function estimateReadingMinutes(markdown: string): number {
 	const words = markdown.trim().split(/\s+/).filter(Boolean).length;
 	return Math.max(1, Math.ceil(words / 200));
+}
+
+export interface GalleryPhoto {
+	id: string;
+	slug: string;
+	title: string;
+	location: string;
+	remark: string;
+	coverImage: string;
+	createdAt: Date;
+}
+
+function getGalleryName(page: PageObjectResponse): string {
+	const nameProp = getProperty(page, "Name", "name", "名称", "Title", "title");
+	if (nameProp?.type === "title") {
+		return nameProp.title.map((part) => part.plain_text).join("").trim();
+	}
+	return getTitle(page);
+}
+
+function getRichTextProperty(
+	page: PageObjectResponse,
+	...names: string[]
+): string {
+	const prop = getProperty(page, ...names);
+	if (prop?.type === "rich_text") {
+		return prop.rich_text.map((part) => part.plain_text).join("").trim();
+	}
+	if (prop?.type === "select" && prop.select?.name) {
+		return prop.select.name.trim();
+	}
+	return "";
+}
+
+function getGalleryPhotoUrl(page: PageObjectResponse): string | null {
+	const photoProp = getProperty(page, "photo", "Photo", "照片");
+	if (photoProp?.type !== "files" || photoProp.files.length === 0) {
+		return null;
+	}
+
+	const file = photoProp.files[0];
+	if (file.type === "file") return file.file.url;
+	if (file.type === "external") return file.external.url;
+	return null;
+}
+
+function buildGallerySlug(title: string, pageId: string): string {
+	const normalized = title
+		.trim()
+		.toLowerCase()
+		.replace(/\s+/g, "-")
+		.replace(/[^\p{L}\p{N}-]+/gu, "")
+		.replace(/-+/g, "-")
+		.replace(/^-|-$/g, "");
+
+	const shortId = pageId.replace(/-/g, "").slice(-8);
+	if (normalized) return `${normalized}-${shortId}`;
+	return `photo-${shortId}`;
+}
+
+function toGalleryPhoto(page: PageObjectResponse): GalleryPhoto | null {
+	const coverImage = getGalleryPhotoUrl(page);
+	if (!coverImage) return null;
+
+	const id = page.id;
+	const title = getGalleryName(page) || "Untitled";
+
+	return {
+		id,
+		slug: buildGallerySlug(title, id),
+		title,
+		location: getRichTextProperty(page, "location", "Location", "地点"),
+		remark: getRichTextProperty(page, "remark", "Remark", "备注"),
+		coverImage,
+		createdAt: new Date(page.created_time),
+	};
+}
+
+let galleryCache: GalleryPhoto[] | null = null;
+let galleryCacheTime = 0;
+
+async function fetchGalleryFromNotion(): Promise<GalleryPhoto[]> {
+	const notion = getNotionClient();
+	const databaseId = getEnv("NOTION_GALLERY_DB_ID");
+
+	if (!notion || !databaseId) {
+		console.warn(
+			"[notion] NOTION_TOKEN 或 NOTION_GALLERY_DB_ID 未配置，跳过 Notion 画廊。",
+		);
+		return [];
+	}
+
+	try {
+		const dataSourceId = await resolveDataSourceId(notion, databaseId);
+		if (!dataSourceId) return [];
+
+		const photos: GalleryPhoto[] = [];
+		let cursor: string | undefined;
+
+		do {
+			const response = await notion.dataSources.query({
+				data_source_id: dataSourceId,
+				sorts: [
+					{
+						timestamp: "created_time",
+						direction: "descending",
+					},
+				],
+				start_cursor: cursor,
+				page_size: 100,
+			});
+
+			for (const result of response.results) {
+				if (!isPageObject(result)) continue;
+				const photo = toGalleryPhoto(result);
+				if (photo) photos.push(photo);
+			}
+
+			cursor = response.has_more
+				? (response.next_cursor ?? undefined)
+				: undefined;
+		} while (cursor);
+
+		return photos.sort(
+			(a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+		);
+	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : "Unknown Notion API error";
+		logNotionAccessHelp(message);
+		return [];
+	}
+}
+
+export async function getGalleryPhotos(): Promise<GalleryPhoto[]> {
+	const now = Date.now();
+	if (galleryCache && now - galleryCacheTime < CACHE_TTL) {
+		return galleryCache;
+	}
+
+	const photos = await fetchGalleryFromNotion();
+	galleryCache = photos;
+	galleryCacheTime = now;
+	return photos;
+}
+
+export function clearGalleryPhotosCache(): void {
+	galleryCache = null;
+	galleryCacheTime = 0;
 }

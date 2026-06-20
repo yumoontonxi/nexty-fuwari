@@ -8,8 +8,7 @@ const categories = await getCategoryList();
 ---
 
 <div class="category-list">
-    <div class="category-label">{i18n(I18nKey.categories)}</div>
-    <div class="category-divider"></div>
+    <div class="sidebar-section-title">{i18n(I18nKey.categories)}</div>
     {categories.map((c) => (
         <ButtonLink
             url={c.url}
@@ -23,22 +22,6 @@ const categories = await getCategoryList();
 
 <style>
     .category-list {
-        margin-top: 32px;
-    }
-
-    .category-label {
-        font-family: var(--font-text);
-        font-size: 11px;
-        font-weight: 400;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--text-tertiary);
-        margin-bottom: 8px;
-    }
-
-    .category-divider {
-        height: 1px;
-        background: var(--border-subtle);
-        margin-bottom: 0;
+        margin-top: 0;
     }
 </style>

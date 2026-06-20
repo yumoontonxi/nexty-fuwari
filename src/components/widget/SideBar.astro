@@ -21,6 +21,44 @@ const className = Astro.props.class;
         flex-shrink: 0;
     }
 
+    .sidebar :global(.sidebar-profile) {
+        position: relative;
+        padding: 40px 20px;
+        margin-bottom: 40px;
+        text-align: center;
+        background: transparent;
+    }
+
+    .sidebar :global(.sidebar-section-title) {
+        font-family: var(--font-display);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border-subtle);
+        padding-bottom: 8px;
+    }
+
+    .sidebar :global(.sidebar-category-item) {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        text-decoration: none;
+        color: var(--text-secondary);
+        transition: color 0.3s ease, padding-left 0.3s ease;
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .sidebar :global(.sidebar-category-item:hover) {
+        background: transparent;
+        color: var(--primary);
+        padding-left: 8px;
+    }
+
     @media (min-width: 768px) and (max-width: 1024px) {
         .sidebar {
             width: var(--sidebar-width-tablet);

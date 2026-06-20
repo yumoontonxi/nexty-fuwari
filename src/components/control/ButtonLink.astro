@@ -6,7 +6,7 @@ interface Props {
 }
 const { badge, url, label } = Astro.props;
 ---
-<a href={url} aria-label={label} class="category-row">
+<a href={url} aria-label={label} class="sidebar-category-item">
     <span class="category-name"><slot></slot></span>
     {badge !== undefined && badge !== null && badge !== '' && (
         <span class="category-count">{badge}</span>
@@ -14,24 +14,10 @@ const { badge, url, label } = Astro.props;
 </a>
 
 <style>
-    .category-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 36px;
-        text-decoration: none;
-        background: none;
-    }
-
     .category-name {
         font-family: var(--font-text);
         font-size: 14px;
-        color: var(--text-secondary);
-        transition: color var(--duration-fast) ease;
-    }
-
-    .category-row:hover .category-name {
-        color: var(--text-primary);
+        color: inherit;
     }
 
     .category-count {
@@ -39,5 +25,11 @@ const { badge, url, label } = Astro.props;
         font-size: 14px;
         color: var(--text-tertiary);
         text-align: right;
+        transition: color 0.2s ease;
+    }
+
+    .sidebar-category-item:hover .category-count {
+        color: inherit;
+        opacity: 0.75;
     }
 </style>

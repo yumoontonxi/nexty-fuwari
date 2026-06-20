@@ -1,10 +1,11 @@
 ---
 import Navbar from "./Navbar.astro";
-import type { HeroSlide } from "../utils/hero-utils";
+import HomeCarousel from "./HomeCarousel.astro";
+import type { HomeCarouselSlide } from "../utils/carousel-utils";
 import { url } from "../utils/url-utils";
 
 interface Props {
-	slides?: HeroSlide[];
+	slides?: HomeCarouselSlide[];
 }
 
 const title = "Nexty";
@@ -29,24 +30,13 @@ const hasSlides = slides.length > 0;
     aria-hidden="true"
   ></div>
 
-  {hasSlides && (
-    <div id="hero-track-wrapper">
-      <div id="hero-track">
-        {slides.map((slide) => (
-          <a class="hero-slide" href={slide.href}>
-            <img src={slide.image} alt={slide.title} loading="eager" decoding="async" />
-            {slide.caption && <div class="slide-caption">{slide.caption}</div>}
-          </a>
-        ))}
-      </div>
-    </div>
-  )}
+  {hasSlides && <HomeCarousel slides={slides} />}
 
   <Navbar floating />
 
-  <div class="hero-content absolute inset-0 z-10 flex flex-col items-center justify-center -mt-[5vh]">
+  <div class="hero-content absolute inset-0 z-10 flex flex-col items-center justify-center -mt-[5vh] pointer-events-none">
     <div id="hero-text">
-      <h1 class="hero-title">{title}</h1>
+      <h1 id="hero-title" class="hero-title">{title}</h1>
       <p class="hero-slogan">{slogan}</p>
     </div>
   </div>
@@ -60,111 +50,13 @@ const hasSlides = slides.length > 0;
       <br />
       <span>Powered by Ytx &amp; apple &amp; Gemini</span>
     </div>
-    <a href={url("/posts/")} id="hero-enter">ENTER →</a>
   </div>
+  <a href={url("/posts/")} id="hero-enter">ENTER →</a>
 </section>
 
 <style>
   .hero-overlay {
     background: var(--hero-overlay);
-  }
-
-  #hero-track-wrapper {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    transform: translateY(-55%);
-    overflow: hidden;
-    z-index: 0;
-    pointer-events: auto;
-    mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(0, 0, 0, 0.6) 8%,
-      black 20%,
-      black 80%,
-      rgba(0, 0, 0, 0.6) 92%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(0, 0, 0, 0.6) 8%,
-      black 20%,
-      black 80%,
-      rgba(0, 0, 0, 0.6) 92%,
-      transparent 100%
-    );
-  }
-
-  #hero-track-wrapper::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 45%;
-    height: 100%;
-    backdrop-filter: blur(6px) brightness(0.6);
-    -webkit-backdrop-filter: blur(6px) brightness(0.6);
-    mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black 20%,
-      black 80%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black 20%,
-      black 80%,
-      transparent 100%
-    );
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  #hero-track {
-    display: flex;
-    gap: 24px;
-    padding: 0 15vw;
-    will-change: transform;
-    pointer-events: auto;
-  }
-
-  .hero-slide {
-    position: relative;
-    flex-shrink: 0;
-    width: 65vw;
-    height: 42vh;
-    border-radius: 4px;
-    overflow: hidden;
-    cursor: pointer;
-    text-decoration: none;
-    display: block;
-  }
-
-  .hero-slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-  }
-
-  .slide-caption {
-    position: absolute;
-    bottom: 16px;
-    left: 20px;
-    right: 20px;
-    font-family: var(--font-text);
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.65);
-    letter-spacing: 0.05em;
-    line-height: 1.6;
-    z-index: 2;
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
   }
 
   #hero-text {
@@ -177,12 +69,14 @@ const hasSlides = slides.length > 0;
   #hero-footer {
     position: absolute;
     bottom: 28px;
-    left: 40px;
-    right: 40px;
+    left: 0;
+    right: 0;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
     z-index: 10;
+    pointer-events: auto;
   }
 
   #hero-copyright {
@@ -191,6 +85,7 @@ const hasSlides = slides.length > 0;
     color: rgba(255, 255, 255, 0.35);
     letter-spacing: 0.03em;
     line-height: 1.8;
+    text-align: center;
   }
 
   #hero-copyright a {
@@ -205,30 +100,39 @@ const hasSlides = slides.length > 0;
   }
 
   #hero-enter {
+    position: absolute;
+    bottom: 28px;
+    right: 40px;
+    z-index: 10;
+    pointer-events: auto;
     font-family: var(--font-text);
     font-size: 13px;
     color: rgba(255, 255, 255, 0.6);
     letter-spacing: 0.15em;
     text-decoration: none;
     transition: color 0.3s ease;
-    flex-shrink: 0;
   }
 
   #hero-enter:hover {
     color: #ffffff;
   }
 
-  .hero-title {
+  #hero-title {
+    user-select: none;
+    -webkit-user-select: none;
     font-family: var(--font-display);
-    font-size: var(--font-size-hero);
-    font-weight: 300;
+    font-size: clamp(5rem, 11vw, 9rem);
+    font-weight: 200;
     letter-spacing: 0.08em;
     line-height: 1;
+    margin: 0;
     background: linear-gradient(160deg, #8b4a4a 0%, #c8a0a0 45%, #f5f5f7 100%);
     -webkit-background-clip: text;
-    background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: 0;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6))
+      drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4))
+      drop-shadow(0 1px 0 rgba(255, 255, 255, 0.1));
   }
 
   .hero-slogan {
@@ -242,151 +146,16 @@ const hasSlides = slides.length > 0;
   }
 
   @media (max-width: 767px) {
-    .hero-title {
-      font-size: var(--font-size-hero-mobile);
+    #hero-enter {
+      right: 24px;
+      bottom: 24px;
     }
 
     #hero-footer {
-      left: 24px;
-      right: 24px;
       bottom: 24px;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
     }
   }
 </style>
-
-{hasSlides && (
-  <script is:inline>
-    (function initHeroCarouselModule() {
-      const SLIDE_SPEED = 40;
-      let animId = null;
-
-      function cleanup(instance) {
-        if (!instance) return;
-        if (instance.animId) cancelAnimationFrame(instance.animId);
-        if (instance.wheelHandler) {
-          instance.wrapper.removeEventListener("wheel", instance.wheelHandler);
-        }
-        if (instance.mouseEnterHandler) {
-          instance.wrapper.removeEventListener("mouseenter", instance.mouseEnterHandler);
-        }
-        if (instance.mouseLeaveHandler) {
-          instance.wrapper.removeEventListener("mouseleave", instance.mouseLeaveHandler);
-        }
-        if (instance.visibilityHandler) {
-          document.removeEventListener("visibilitychange", instance.visibilityHandler);
-        }
-      }
-
-      function boot() {
-        const track = document.getElementById("hero-track");
-        const wrapper = document.getElementById("hero-track-wrapper");
-        if (!track || !wrapper) return;
-
-        cleanup(window.__heroCarousel);
-
-        let offset = 0;
-        let isPaused = false;
-        let lastTime = null;
-
-        function getSlideWidth() {
-          const slide = track.querySelector(".hero-slide:not(.clone)");
-          if (!slide) return window.innerWidth * 0.65 + 24;
-          return slide.offsetWidth + 24;
-        }
-
-        function getTotalWidth() {
-          const slides = track.querySelectorAll(".hero-slide:not(.clone)");
-          return slides.length * getSlideWidth();
-        }
-
-        function normalizeOffset() {
-          const total = getTotalWidth();
-          if (total <= 0) return;
-          if (offset < 0) offset += total;
-          if (offset >= total) offset -= total;
-        }
-
-        function animate(ts) {
-          if (lastTime === null) lastTime = ts;
-          const delta = ts - lastTime;
-          lastTime = ts;
-
-          if (!isPaused) {
-            offset += SLIDE_SPEED * (delta / 1000);
-            normalizeOffset();
-          }
-
-          track.style.transform = `translateX(${-offset}px)`;
-          instance.animId = requestAnimationFrame(animate);
-        }
-
-        if (!track.querySelector(".hero-slide.clone")) {
-          const origSlides = Array.from(
-            track.querySelectorAll(".hero-slide:not(.clone)"),
-          );
-          origSlides.forEach((slide) => {
-            const clone = slide.cloneNode(true);
-            clone.classList.add("clone");
-            track.appendChild(clone);
-          });
-        }
-
-        track.style.pointerEvents = "auto";
-        wrapper.style.pointerEvents = "auto";
-
-        const instance = {
-          wrapper,
-          animId: null,
-          wheelHandler: null,
-          mouseEnterHandler: null,
-          mouseLeaveHandler: null,
-          visibilityHandler: null,
-        };
-
-        instance.mouseEnterHandler = () => {
-          isPaused = true;
-        };
-
-        instance.mouseLeaveHandler = () => {
-          isPaused = false;
-          lastTime = null;
-        };
-
-        instance.wheelHandler = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          offset += e.deltaY * 0.8;
-          normalizeOffset();
-        };
-
-        instance.visibilityHandler = () => {
-          if (document.hidden) {
-            if (instance.animId) cancelAnimationFrame(instance.animId);
-            lastTime = null;
-          } else {
-            lastTime = null;
-            instance.animId = requestAnimationFrame(animate);
-          }
-        };
-
-        wrapper.addEventListener("mouseenter", instance.mouseEnterHandler);
-        wrapper.addEventListener("mouseleave", instance.mouseLeaveHandler);
-        wrapper.addEventListener("wheel", instance.wheelHandler, { passive: false });
-        document.addEventListener("visibilitychange", instance.visibilityHandler);
-
-        window.__heroCarousel = instance;
-        lastTime = null;
-        instance.animId = requestAnimationFrame(animate);
-      }
-
-      boot();
-      document.addEventListener("astro:page-load", boot);
-    })();
-  </script>
-)}
 
 {!hasSlides && (
 <script>

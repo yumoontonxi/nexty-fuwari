@@ -50,7 +50,7 @@ function notionToUnified(post: NotionPost): UnifiedPostListItem {
 		published: post.published,
 		tags: post.tags,
 		category,
-		image: post.image ?? "",
+		image: post.coverImage ?? post.image ?? "",
 		description: post.description,
 		draft: false,
 		notionId: post.id,
@@ -70,6 +70,58 @@ export async function getMergedPosts(): Promise<UnifiedPostListItem[]> {
 
 	return merged.sort(
 		(a, b) => b.published.getTime() - a.published.getTime(),
+	);
+}
+
+export type PostNavItem = {
+	title: string;
+	url: string;
+};
+
+export type MergedPostNavigation = {
+	/** Chronologically newer post — shown on the left nav control */
+	newer: PostNavItem | null;
+	/** Chronologically older post — shown on the right nav control */
+	older: PostNavItem | null;
+};
+
+function toNavItem(post: UnifiedPostListItem): PostNavItem {
+	return { title: post.title, url: post.url };
+}
+
+export async function getMergedPostNavigation(
+	matcher: (post: UnifiedPostListItem) => boolean,
+): Promise<MergedPostNavigation> {
+	const allPosts = await getMergedPosts();
+	const index = allPosts.findIndex(matcher);
+
+	if (index === -1) {
+		return { newer: null, older: null };
+	}
+
+	return {
+		newer: index > 0 ? toNavItem(allPosts[index - 1]) : null,
+		older:
+			index < allPosts.length - 1 ? toNavItem(allPosts[index + 1]) : null,
+	};
+}
+
+export async function getMergedPostNavigationByLocalSlug(
+	slug: string,
+): Promise<MergedPostNavigation> {
+	return getMergedPostNavigation(
+		(post) => post.source === "local" && post.slug === slug,
+	);
+}
+
+export async function getMergedPostNavigationByNotionId(
+	id: string,
+): Promise<MergedPostNavigation> {
+	const normalizedId = id.replace(/-/g, "");
+	return getMergedPostNavigation(
+		(post) =>
+			post.source === "notion" &&
+			post.notionId?.replace(/-/g, "") === normalizedId,
 	);
 }
 

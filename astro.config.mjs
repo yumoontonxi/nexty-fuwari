@@ -1,4 +1,5 @@
 import sitemap from "@astrojs/sitemap";
+import cloudflare from "@astrojs/cloudflare";
 import svelte from "@astrojs/svelte";
 import tailwind from "@astrojs/tailwind";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
@@ -28,6 +29,8 @@ import { pluginCustomCopyButton } from "./src/plugins/expressive-code/custom-cop
 export default defineConfig({
 	site: "https://fuwari.vercel.app/",
 	base: "/",
+	output: "server",
+	adapter: cloudflare(),
 	trailingSlash: "always",
 	integrations: [
 		tailwind({

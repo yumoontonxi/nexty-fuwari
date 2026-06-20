@@ -1,0 +1,22 @@
+---
+export const prerender = true;
+
+import FullWidthLayout from "../layouts/FullWidthLayout.astro";
+import { url } from "../utils/url-utils";
+---
+
+<FullWidthLayout title="404" description="页面未找到">
+    <div class="not-found flex min-h-[50vh] flex-col items-center justify-center text-center">
+        <p class="text-sm uppercase tracking-[0.2em] text-[var(--text-tertiary)]">404</p>
+        <h1 class="mt-4 text-3xl font-light text-[var(--text-primary)]">页面未找到</h1>
+        <p class="mt-3 max-w-md text-sm text-[var(--text-secondary)]">
+            你访问的文章可能已移动、删除，或链接中的 slug 无效。
+        </p>
+        <a
+            href={url("/")}
+            class="mt-8 text-sm tracking-wide text-[var(--accent-warm)] transition-colors hover:text-[var(--text-primary)]"
+        >
+            返回首页
+        </a>
+    </div>
+</FullWidthLayout>
