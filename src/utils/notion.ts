@@ -1,5 +1,7 @@
 import { Client } from "@notionhq/client";
 import type { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
+import fs from "node:fs";
+import path from "node:path";
 import { NotionToMarkdown } from "notion-to-md";
 
 export interface NotionPost {
@@ -15,6 +17,78 @@ export interface NotionPost {
 	coverImage: string | null;
 	/** @deprecated Use coverImage */
 	image: string | null;
+}
+
+const NOTION_IMAGE_CACHE_DIR = path.join(
+	process.cwd(),
+	"public",
+	"notion-images",
+);
+
+function inferImageExtension(url: string, contentType: string | null): string {
+	const fromType = contentType?.split(";")[0]?.trim().toLowerCase();
+	if (fromType === "image/png") return "png";
+	if (fromType === "image/webp") return "webp";
+	if (fromType === "image/gif") return "gif";
+	if (fromType === "image/jpeg" || fromType === "image/jpg") return "jpg";
+
+	const pathname = url.split("?")[0]?.toLowerCase() ?? "";
+	if (pathname.endsWith(".png")) return "png";
+	if (pathname.endsWith(".webp")) return "webp";
+	if (pathname.endsWith(".gif")) return "gif";
+	if (pathname.endsWith(".jpg") || pathname.endsWith(".jpeg")) return "jpg";
+
+	return "jpg";
+}
+
+async function downloadAndCacheImage(
+	url: string,
+	id: string,
+): Promise<string> {
+	if (url.startsWith("/notion-images/")) return url;
+
+	const safeId = id.replace(/-/g, "");
+	if (!safeId) return url;
+
+	if (!fs.existsSync(NOTION_IMAGE_CACHE_DIR)) {
+		fs.mkdirSync(NOTION_IMAGE_CACHE_DIR, { recursive: true });
+	}
+
+	const existing = fs
+		.readdirSync(NOTION_IMAGE_CACHE_DIR)
+		.find((name) => name.startsWith(`${safeId}.`));
+	if (existing) {
+		return `/notion-images/${existing}`;
+	}
+
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}`);
+		}
+
+		const ext = inferImageExtension(url, response.headers.get("content-type"));
+		const filename = `${safeId}.${ext}`;
+		const filepath = path.join(NOTION_IMAGE_CACHE_DIR, filename);
+		const buffer = Buffer.from(await response.arrayBuffer());
+		fs.writeFileSync(filepath, buffer);
+
+		return `/notion-images/${filename}`;
+	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : "Unknown download error";
+		console.warn(`[notion] Failed to cache image for ${safeId}: ${message}`);
+		return url;
+	}
+}
+
+async function cacheCoverImage(
+	url: string | null,
+	pageId: string,
+): Promise<string | null> {
+	if (!url) return null;
+	if (!/^https?:\/\//i.test(url)) return url;
+	return downloadAndCacheImage(url, pageId);
 }
 
 function getEnv(
@@ -289,8 +363,19 @@ async function fetchFromNotion(): Promise<NotionPost[]> {
 				: undefined;
 		} while (cursor);
 
-		return posts.sort(
+		const sorted = posts.sort(
 			(a, b) => b.date.getTime() - a.date.getTime(),
+		);
+
+		return Promise.all(
+			sorted.map(async (post) => {
+				const coverImage = await cacheCoverImage(post.coverImage, post.id);
+				return {
+					...post,
+					coverImage,
+					image: coverImage,
+				};
+			}),
 		);
 	} catch (error) {
 		const message =
@@ -349,7 +434,13 @@ export async function getNotionPostById(
 	try {
 		const page = await notion.pages.retrieve({ page_id: normalizedId });
 		if (!isPageObject(page) || !isPublished(page)) return null;
-		return toNotionPost(page);
+		const post = toNotionPost(page);
+		const coverImage = await cacheCoverImage(post.coverImage, post.id);
+		return {
+			...post,
+			coverImage,
+			image: coverImage,
+		};
 	} catch {
 		return null;
 	}
@@ -481,8 +572,15 @@ async function fetchGalleryFromNotion(): Promise<GalleryPhoto[]> {
 				: undefined;
 		} while (cursor);
 
-		return photos.sort(
+		const sorted = photos.sort(
 			(a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+		);
+
+		return Promise.all(
+			sorted.map(async (photo) => ({
+				...photo,
+				coverImage: await downloadAndCacheImage(photo.coverImage, photo.id),
+			})),
 		);
 	} catch (error) {
 		const message =
