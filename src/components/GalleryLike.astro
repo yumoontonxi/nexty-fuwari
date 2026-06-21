@@ -122,40 +122,51 @@ const { slug, compact = false } = Astro.props;
 function initGalleryLikes() {
 	document.querySelectorAll<HTMLButtonElement>(".gallery-like-btn").forEach((btn) => {
 		if (btn.dataset.likeBound === "true") return;
-
 		const slug = btn.getAttribute("data-slug");
 		if (!slug) return;
 
 		const countSpan = btn.querySelector<HTMLElement>(".like-count");
 		if (!countSpan) return;
-
 		btn.dataset.likeBound = "true";
-
 		const storageKey = `gallery-like-${slug}`;
+
+		// 页面加载时，向服务器请求真实点赞数（注意这里加了斜杠 likes/?id=）
+		fetch(`/api/likes/?id=${encodeURIComponent(slug)}`)
+			.then((res) => res.json())
+			.then((data: { count: number }) => {
+				countSpan.textContent = String(data.count ?? 0);
+			})
+			.catch(() => {
+				// 接口失败时静默忽略，保留默认显示0
+			});
+
+		// 本地仅用于记录"这台设备是否已经点过"，防止重复点击刷数据
 		const isLiked = localStorage.getItem(storageKey);
 		if (isLiked === "true") {
 			btn.classList.add("liked");
-			countSpan.textContent = "1";
 		}
 
 		btn.addEventListener("click", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
 
-			let count = Number.parseInt(countSpan.textContent || "0", 10);
+			// 已经点过的，不再重复请求
+			if (btn.classList.contains("liked")) return;
 
-			if (btn.classList.contains("liked")) {
-				btn.classList.remove("liked");
-				countSpan.textContent = String(Math.max(0, count - 1));
-				localStorage.removeItem(storageKey);
-			} else {
-				btn.classList.add("liked");
-				countSpan.textContent = String(count + 1);
-				localStorage.setItem(storageKey, "true");
+			btn.classList.add("liked");
+			localStorage.setItem(storageKey, "true");
 
-				// 预留后续接入真实主题 API 的接口
-				// console.log('触发真实后端点赞 API:', slug);
-			}
+			// 注意这里加了斜杠 likes/?id=
+			fetch(`/api/likes/?id=${encodeURIComponent(slug)}`, { method: "POST" })
+				.then((res) => res.json())
+				.then((data: { count: number }) => {
+					countSpan.textContent = String(data.count ?? 0);
+				})
+				.catch(() => {
+					// 请求失败则回退状态，允许用户重试
+					btn.classList.remove("liked");
+					localStorage.removeItem(storageKey);
+				});
 		});
 	});
 }
