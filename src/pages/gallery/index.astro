@@ -16,14 +16,23 @@ const galleryItems = (await getGalleryImages()).map((item) => ({
 
 <FullWidthLayout title={i18n(I18nKey.gallery)} description={i18n(I18nKey.gallery)}>
 	<div class="gallery-page">
-		<div class="gallery-shell">
-			<section class="gallery-slogan" aria-label="创作灵感">
-				<h1 class="gallery-slogan-title">{i18n(I18nKey.gallery)}</h1>
-				<p class="gallery-slogan-quote">
-					『留住那些天马行空的瞬间，是给未来的礼物。』
-				</p>
-			</section>
-
+		<div class="gallery-shell" style="position:relative; overflow:hidden;">
+			<div aria-hidden="true" style="
+				pointer-events: none;
+				position: absolute;
+				top: 50%;
+				right: 1.5rem;
+				transform: translateY(-50%);
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				opacity: 0.08;
+				user-select: none;
+				z-index: 0;
+			">
+				<div style="width:1px; height:80px; background:var(--text-primary);"></div>
+				<div style="font-size:0.7rem; font-weight:400; color:var(--text-primary); letter-spacing:0.3em; writing-mode:vertical-rl;">留 · 影</div>
+			</div>
 			{galleryItems.length > 0 ? (
 				<div class="gallery-masonry">
 					{galleryItems.map((item) => (
@@ -69,33 +78,6 @@ const galleryItems = (await getGalleryImages()).map((item) => ({
 		max-width: 1400px;
 		margin-inline: auto;
 		padding-inline: clamp(1.25rem, 4vw, 2.5rem);
-	}
-
-	.gallery-slogan {
-		margin-bottom: clamp(3rem, 8vw, 5.5rem);
-		padding-bottom: clamp(2rem, 5vw, 3.5rem);
-		border-bottom: 1px solid var(--border-subtle);
-	}
-
-	.gallery-slogan-title {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: clamp(2.25rem, 5vw, 3rem);
-		font-weight: 700;
-		line-height: 1.15;
-		letter-spacing: 0.02em;
-		color: var(--text-primary);
-	}
-
-	.gallery-slogan-quote {
-		margin: 1.5rem 0 0;
-		max-width: 36rem;
-		font-family: var(--font-text);
-		font-size: clamp(1rem, 2vw, 1.25rem);
-		font-weight: 300;
-		line-height: 1.75;
-		letter-spacing: 0.04em;
-		color: var(--text-tertiary);
 	}
 
 	.gallery-masonry {

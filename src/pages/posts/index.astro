@@ -13,22 +13,27 @@ import {
 export const prerender = true;
 
 const allPosts = await getMergedPosts();
-const localCount = allPosts.filter((post) => post.source === "local").length;
-const notionCount = allPosts.filter((post) => post.source === "notion").length;
 const page = paginateUnifiedPosts(allPosts, PAGE_SIZE, 1);
 ---
 
 <MainGridLayout title={i18n(I18nKey.posts)} description={i18n(I18nKey.posts)}>
-    <div class="page-shell flex min-h-[calc(100vh-200px)] flex-1 flex-grow flex-col">
-        <header class="mb-8">
-            <h1 class="text-2xl font-light tracking-wide text-[var(--text-primary)]">
-                {i18n(I18nKey.posts)}
-            </h1>
-            <p class="mt-2 text-sm text-[var(--text-tertiary)]">
-                本地 Markdown {localCount} 篇 · Notion 随笔 {notionCount} 篇 · 共 {allPosts.length} 篇
-            </p>
-        </header>
-
+    <div class="page-shell flex min-h-[calc(100vh-200px)] flex-1 flex-grow flex-col" style="position:relative; overflow:hidden;">
+        <div aria-hidden="true" style="
+            pointer-events: none;
+            position: absolute;
+            top: 50%;
+            right: 1.5rem;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0.08;
+            user-select: none;
+            z-index: 0;
+        ">
+            <div style="width:1px; height:80px; background:var(--text-primary);"></div>
+            <div style="font-size:0.7rem; font-weight:400; color:var(--text-primary); letter-spacing:0.3em; writing-mode:vertical-rl;">微 · 光</div>
+        </div>
         <div class="flex-1 rounded-lg bg-[var(--bg-primary)]">
             <PostPage page={page}></PostPage>
         </div>

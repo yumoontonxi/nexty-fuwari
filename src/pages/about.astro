@@ -8,8 +8,7 @@ import { profileConfig, siteConfig } from "../config";
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 
-const heroBackground =
-	"https://picsum.photos/1920/800?random=soil-hero";
+const heroBackground = "/about/hero.jpg";
 
 type StoryLayout = "image-left" | "image-right";
 
@@ -27,7 +26,7 @@ const storySections: StorySection[] = [
 		id: "who",
 		title: "我是谁",
 		layout: "image-left",
-		image: "https://picsum.photos/800/1000?random=81",
+		image: "/about/who.jpg",
 		imageAlt: "原野上的足迹 — 我是谁",
 		paragraphs: [
 			"我习惯把生活当作一片缓慢呼吸的土壤——不喧哗，却默默承接每一次落脚与回望。",
@@ -39,7 +38,7 @@ const storySections: StorySection[] = [
 		id: "doing",
 		title: "我在做什么",
 		layout: "image-right",
-		image: "https://picsum.photos/900/700?random=82",
+		image: "/about/doing.jpg",
 		imageAlt: "微光中的创作 — 我在做什么",
 		paragraphs: [
 			"我写作，把对 AI、创作与时代的观察，整理成可以慢慢阅读的文字；我拍照，留住街角、晨光与暮色里那些容易被忽略的瞬间。",
@@ -51,7 +50,7 @@ const storySections: StorySection[] = [
 		id: "garden",
 		title: "关于这个数字花园",
 		layout: "image-left",
-		image: "https://picsum.photos/850/950?random=83",
+		image: "/about/garden.jpg",
 		imageAlt: "数字花园的土壤 — 网站初衷",
 		paragraphs: [
 			"这个网站是一小块属于我的数字土壤。原野是入口，微光承载思考，留影收藏影像，土壤则安放我为何出发的答案。",
