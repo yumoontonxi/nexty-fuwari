@@ -2,7 +2,6 @@
 import Navbar from "./Navbar.astro";
 import HomeCarousel from "./HomeCarousel.astro";
 import type { HomeCarouselSlide } from "../utils/carousel-utils";
-import { url } from "../utils/url-utils";
 
 interface Props {
 	slides?: HomeCarouselSlide[];
@@ -43,12 +42,9 @@ const hasSlides = slides.length > 0;
 
   <div id="hero-footer">
     <div id="hero-copyright">
-      <span>© 2026 Ytx. 保留所有权利。</span>
-      <a href={url("rss.xml")}>RSS</a>
-      <span>·</span>
-      <a href={url("sitemap-index.xml")}>站点地图</a>
+      <span>© 2026 Ytx. 以文字与影像，留住此刻。</span>
       <br />
-      <span>Powered by Ytx &amp; apple &amp; Gemini</span>
+      <span>Built with Astro · Hosted on Cloudflare</span>
     </div>
   </div>
 </section>
