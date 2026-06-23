@@ -42,7 +42,7 @@ export const navBarConfig: NavBarConfig = {
 
 export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/demo-avatar.jpg",
-	name: "China Ytx",
+	name: "Ytx",
 	bio: "大地从不喧哗，但她孕育万物。",
 	links: [
 		{
