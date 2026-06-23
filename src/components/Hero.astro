@@ -51,7 +51,6 @@ const hasSlides = slides.length > 0;
       <span>Powered by Ytx &amp; apple &amp; Gemini</span>
     </div>
   </div>
-  <a href={url("/posts/")} id="hero-enter">ENTER →</a>
 </section>
 
 <style>
@@ -99,24 +98,6 @@ const hasSlides = slides.length > 0;
     color: rgba(255, 255, 255, 0.7);
   }
 
-  #hero-enter {
-    position: absolute;
-    bottom: 28px;
-    right: 40px;
-    z-index: 10;
-    pointer-events: auto;
-    font-family: var(--font-text);
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
-    letter-spacing: 0.15em;
-    text-decoration: none;
-    transition: color 0.3s ease;
-  }
-
-  #hero-enter:hover {
-    color: #ffffff;
-  }
-
   #hero-title {
     user-select: none;
     -webkit-user-select: none;
@@ -146,11 +127,6 @@ const hasSlides = slides.length > 0;
   }
 
   @media (max-width: 767px) {
-    #hero-enter {
-      right: 24px;
-      bottom: 24px;
-    }
-
     #hero-footer {
       bottom: 24px;
     }
@@ -176,9 +152,9 @@ const hasSlides = slides.length > 0;
   // 定义色调
   const COLORS = [
     "rgba(255,255,255,0.75)",        // 近白
-    "rgba(255,242,246,0.85)",        // very pale rose
-    "rgba(245,180,180,0.50)",        // 淡暖红/淡玫瑰
-    "rgba(255,230,220,0.38)"         // 极淡暖, 拖尾
+    "rgba(220,242,235,0.80)",        // very pale mint
+    "rgba(160,210,190,0.45)",        // 淡绿/淡青
+    "rgba(200,230,215,0.32)"         // 极淡绿, 拖尾
   ];
 
   // 细微控制色彩
@@ -392,7 +368,7 @@ const hasSlides = slides.length > 0;
     // 半透明黑色背景，不要全遮
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = "#120D0D";
+    ctx.fillStyle = "#0A0F0D";
     ctx.fillRect(0, 0, w, h);
 
     // 背景微光点
