@@ -9,6 +9,7 @@ import type {
 export const siteConfig: SiteConfig = {
 	title: "Nexty",
 	subtitle: "大地从不喧哗，但她孕育万物。仅以我的视角，留下一些真实的痕迹。",
+	url: "https://nexty.cc",
 	lang: "zh_CN",
 	themeColor: {
 		hue: 250,
