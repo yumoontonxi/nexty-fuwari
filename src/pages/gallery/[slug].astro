@@ -307,12 +307,14 @@ const likeSlug = photo.slug;
 	}
 
 	.gallery-card-sidebar {
+		width: 260px;
+		flex-shrink: 0;
 		display: flex;
 		flex-direction: column;
-		justify-content: space-between;
-		width: min(100%, 16rem);
-		flex-shrink: 0;
-		padding-left: 0.25rem;
+		justify-content: flex-start;
+		gap: 2rem;
+		padding: 2rem 1.75rem;
+		border-left: 1px solid var(--border-subtle);
 	}
 
 	.gallery-card-sidebar-top {
