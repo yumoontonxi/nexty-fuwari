@@ -101,21 +101,7 @@ const likeSlug = photo.slug;
 		<div class="gallery-detail-page">
 		<div class="gallery-detail-shell">
 			<article id="gallery-card" class="gallery-card">
-				<div class="gallery-card-media">
-					{prevSlug ? (
-						<a
-							href={getGalleryUrl(prevSlug)}
-							class="gallery-card-arrow gallery-card-arrow--prev gallery-nav-btn"
-							data-no-swup
-							aria-label={`上一张：${prevTitle}`}
-						>
-							<Icon name="material-symbols:chevron-left-rounded" />
-							<span class="gallery-card-arrow-label">上一张</span>
-						</a>
-					) : (
-						<span class="gallery-card-arrow gallery-card-arrow--placeholder" aria-hidden="true" />
-					)}
-
+				<div class="gallery-card-image-wrap">
 					<img
 						src={photo.coverImage}
 						alt={photo.title}
@@ -123,24 +109,10 @@ const likeSlug = photo.slug;
 						loading="eager"
 						decoding="async"
 					/>
-
-					{nextSlug ? (
-						<a
-							href={getGalleryUrl(nextSlug)}
-							class="gallery-card-arrow gallery-card-arrow--next gallery-nav-btn"
-							data-no-swup
-							aria-label={`下一张：${nextTitle}`}
-						>
-							<span class="gallery-card-arrow-label">下一张</span>
-							<Icon name="material-symbols:chevron-right-rounded" />
-						</a>
-					) : (
-						<span class="gallery-card-arrow gallery-card-arrow--placeholder" aria-hidden="true" />
-					)}
 				</div>
 
-				<div class="gallery-card-placard">
-					<div class="gallery-card-placard-header">
+				<aside class="gallery-card-sidebar">
+					<div class="gallery-card-sidebar-top">
 						<h2 class="gallery-card-title">{photo.title}</h2>
 						{photo.location && (
 							<p class="gallery-card-location">
@@ -148,13 +120,38 @@ const likeSlug = photo.slug;
 								<span>{photo.location}</span>
 							</p>
 						)}
+						{photo.remark && (
+							<p class="gallery-card-remark">{photo.remark}</p>
+						)}
 					</div>
-					{photo.remark && (
-						<p class="gallery-card-remark">{photo.remark}</p>
-					)}
-				</div>
-
-				<GalleryLike slug={likeSlug} />
+					<div class="gallery-card-sidebar-bottom">
+						<GalleryLike slug={likeSlug} />
+						<div class="gallery-card-nav">
+							{prevSlug ? (
+								<a href={getGalleryUrl(prevSlug)} class="gallery-card-nav-btn gallery-nav-btn" data-no-swup aria-label={`上一张：${prevTitle}`}>
+									<Icon name="material-symbols:chevron-left-rounded" />
+									<span>上一张</span>
+								</a>
+							) : (
+								<span class="gallery-card-nav-btn gallery-card-nav-btn--disabled" aria-hidden="true">
+									<Icon name="material-symbols:chevron-left-rounded" />
+									<span>上一张</span>
+								</span>
+							)}
+							{nextSlug ? (
+								<a href={getGalleryUrl(nextSlug)} class="gallery-card-nav-btn gallery-nav-btn" data-no-swup aria-label={`下一张：${nextTitle}`}>
+									<span>下一张</span>
+									<Icon name="material-symbols:chevron-right-rounded" />
+								</a>
+							) : (
+								<span class="gallery-card-nav-btn gallery-card-nav-btn--disabled" aria-hidden="true">
+									<span>下一张</span>
+									<Icon name="material-symbols:chevron-right-rounded" />
+								</span>
+							)}
+						</div>
+					</div>
+				</aside>
 			</article>
 
 			<CommentsStub />
@@ -200,6 +197,9 @@ const likeSlug = photo.slug;
 		pointer-events: auto;
 		cursor: default;
 		margin-top: 1.5rem;
+		display: flex;
+		align-items: stretch;
+		gap: clamp(1.25rem, 3vw, 2rem);
 		background: var(--card-bg, #ffffff);
 		border-radius: 20px;
 		padding: clamp(1.5rem, 4vw, 2.5rem);
@@ -290,11 +290,12 @@ const likeSlug = photo.slug;
 			0 14px 32px rgba(0, 0, 0, 0.22);
 	}
 
-	.gallery-card-media {
+	.gallery-card-image-wrap {
+		flex: 1;
+		min-width: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: clamp(0.5rem, 2vw, 1.25rem);
 	}
 
 	.gallery-card-image {
@@ -305,16 +306,47 @@ const likeSlug = photo.slug;
 		border-radius: 12px;
 	}
 
-	.gallery-card-arrow {
-		flex-shrink: 0;
-		display: inline-flex;
+	.gallery-card-sidebar {
+		display: flex;
 		flex-direction: column;
+		justify-content: space-between;
+		width: min(100%, 16rem);
+		flex-shrink: 0;
+		padding-left: 0.25rem;
+	}
+
+	.gallery-card-sidebar-top {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.gallery-card-sidebar-bottom {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+		margin-top: 1.5rem;
+	}
+
+	.gallery-card-sidebar-bottom :global(.gallery-like) {
+		margin-top: 0;
+		justify-content: flex-start;
+	}
+
+	.gallery-card-nav {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.gallery-card-nav-btn {
+		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.25rem;
-		min-width: 3rem;
-		padding: 0.75rem 0.5rem;
-		border-radius: 14px;
+		gap: 0.35rem;
+		min-height: 2.5rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: 12px;
 		border: 1px solid var(--border-subtle);
 		background: var(--bg-secondary);
 		text-decoration: none;
@@ -329,79 +361,24 @@ const likeSlug = photo.slug;
 			transform var(--duration-fast) ease;
 	}
 
-	.gallery-card-arrow svg {
-		font-size: 1.75rem;
+	.gallery-card-nav-btn svg {
+		font-size: 1.25rem;
 		color: var(--text-primary);
 	}
 
-	.gallery-card-arrow:hover {
+	a.gallery-card-nav-btn:hover {
 		background: var(--bg-tertiary);
 		color: var(--text-primary);
 		transform: translateY(-1px);
 	}
 
-	.gallery-card-arrow--placeholder {
-		visibility: hidden;
+	.gallery-card-nav-btn--disabled {
+		opacity: 0.35;
 		pointer-events: none;
-		border-color: transparent;
-		background: transparent;
-	}
-
-	.gallery-card-arrow-label {
-		writing-mode: vertical-rl;
-		text-orientation: mixed;
-	}
-
-	@media (max-width: 639px) {
-		.gallery-card-media {
-			flex-direction: column;
-		}
-
-		.gallery-card-arrow {
-			flex-direction: row;
-			width: 100%;
-			min-height: 2.75rem;
-		}
-
-		.gallery-card-arrow-label {
-			writing-mode: horizontal-tb;
-		}
-
-		.gallery-card-image {
-			max-width: 100%;
-			order: -1;
-		}
-
-		.gallery-card-arrow--prev {
-			order: 1;
-		}
-
-		.gallery-card-arrow--next {
-			order: 2;
-		}
-
-		.gallery-card-arrow--placeholder {
-			display: none;
-		}
-	}
-
-	.gallery-card-placard {
-		margin-top: 1.75rem;
-		padding-top: 1.25rem;
-		border-top: 1px solid var(--border-subtle);
-	}
-
-	.gallery-card-placard-header {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 1.25rem;
 	}
 
 	.gallery-card-title {
 		margin: 0;
-		flex: 1;
-		min-width: 0;
 		font-family: var(--font-display);
 		font-size: clamp(1.125rem, 2.2vw, 1.375rem);
 		font-weight: 500;
@@ -415,7 +392,6 @@ const likeSlug = photo.slug;
 		align-items: center;
 		gap: 0.35rem;
 		margin: 0;
-		flex-shrink: 0;
 		font-family: var(--font-text);
 		font-size: 0.8125rem;
 		line-height: 1.5;
@@ -429,12 +405,35 @@ const likeSlug = photo.slug;
 	}
 
 	.gallery-card-remark {
-		margin: 1rem 0 0;
+		margin: 0;
 		font-family: var(--font-text);
 		font-size: 0.875rem;
 		line-height: 1.75;
 		letter-spacing: 0.03em;
 		color: var(--text-secondary);
+	}
+
+	@media (max-width: 767px) {
+		.gallery-card {
+			flex-direction: column;
+		}
+
+		.gallery-card-sidebar {
+			width: 100%;
+			padding-left: 0;
+		}
+
+		.gallery-card-sidebar-bottom {
+			margin-top: 1rem;
+		}
+
+		.gallery-card-nav {
+			flex-direction: row;
+		}
+
+		.gallery-card-nav-btn {
+			flex: 1;
+		}
 	}
 </style>
 
